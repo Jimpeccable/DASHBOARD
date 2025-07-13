@@ -7,6 +7,163 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* New styles for the lock overlay */
+        .locked-content-wrapper {
+            position: relative; /* Essential for positioning the absolute overlay */
+            min-height: 500px; /* Ensure enough height for the overlay to cover */
+            display: flex;
+            flex-direction: column;
+            gap: 20px; /* Keep consistent gap between sections within the wrapper */
+        }
+
+        .lock-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); /* Darker overlay */
+            backdrop-filter: blur(10px); /* Stronger blur for "looking glass" */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100; /* Above content, below other fixed elements like top-bar if it were sticky */
+            transition: opacity 0.5s ease;
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 40px rgba(0, 224, 255, 0.4); /* More prominent glow */
+            box-sizing: border-box; /* Include padding in width/height */
+        }
+
+        .lock-overlay.hidden {
+            opacity: 0;
+            pointer-events: none; /* Allow clicks to pass through when hidden */
+        }
+
+        .lock-overlay .lock-icon {
+            font-size: 4.5em; /* Larger icon */
+            color: var(--color-accent-primary);
+            margin-bottom: 25px; /* More space */
+            text-shadow: 0 0 15px rgba(0, 224, 255, 0.6); /* Icon glow */
+        }
+
+        .lock-overlay h2 {
+            font-size: 2.2em; /* Larger heading */
+            color: var(--color-text-light);
+            margin-bottom: 10px;
+        }
+
+        .lock-overlay p {
+            color: var(--color-text-muted);
+            font-size: 1.1em;
+            margin-bottom: 25px;
+            max-width: 400px;
+            line-height: 1.5;
+        }
+
+        .lock-overlay #unlockCodeInput {
+            background-color: var(--color-background-dark);
+            border: 1px solid var(--color-border-subtle);
+            padding: 15px 20px; /* Larger input field */
+            border-radius: 8px;
+            color: var(--color-text-light);
+            font-size: 1.2em; /* Larger font in input */
+            width: 90%;
+            max-width: 350px;
+            margin-bottom: 15px;
+            text-align: center;
+            outline: none; /* Remove default outline */
+            box-shadow: inset 0 0 8px rgba(0, 224, 255, 0.2); /* Inner glow */
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .lock-overlay #unlockCodeInput:focus {
+            border-color: var(--color-accent-primary);
+            box-shadow: inset 0 0 15px rgba(0, 224, 255, 0.4), 0 0 10px rgba(0, 224, 255, 0.3);
+        }
+
+        .lock-overlay .button {
+            padding: 12px 25px; /* Larger button */
+            font-size: 1.1em;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(255, 179, 0, 0.4); /* Consistent button shadow */
+        }
+
+        .unlock-error {
+            color: var(--color-red);
+            margin-top: 10px;
+            font-size: 1em;
+            height: 1.5em; /* Reserve space to prevent layout shift */
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .unlock-error.show {
+            opacity: 1;
+        }
+
+        /* Shake animation for incorrect input */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+
+        .lock-overlay #unlockCodeInput.shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+            border-color: var(--color-red);
+            box-shadow: inset 0 0 15px rgba(229, 57, 53, 0.4), 0 0 10px rgba(229, 57, 53, 0.3);
+        }
+
+        /* Responsive adjustments for the lock overlay */
+        @media (max-width: 768px) {
+            .lock-overlay .lock-icon {
+                font-size: 3.5em;
+                margin-bottom: 20px;
+            }
+            .lock-overlay h2 {
+                font-size: 1.8em;
+            }
+            .lock-overlay p {
+                font-size: 1em;
+                margin-bottom: 20px;
+            }
+            .lock-overlay #unlockCodeInput {
+                padding: 12px 15px;
+                font-size: 1.1em;
+            }
+            .lock-overlay .button {
+                padding: 10px 20px;
+                font-size: 1em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .lock-overlay .lock-icon {
+                font-size: 3em;
+                margin-bottom: 15px;
+            }
+            .lock-overlay h2 {
+                font-size: 1.6em;
+            }
+            .lock-overlay p {
+                font-size: 0.9em;
+                margin-bottom: 15px;
+            }
+            .lock-overlay #unlockCodeInput {
+                padding: 10px 12px;
+                font-size: 1em;
+            }
+            .lock-overlay .button {
+                padding: 8px 15px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
 </head>
 <body>
     <div id="vanta-background"></div>
@@ -37,93 +194,98 @@
             </aside>
 
             <div class="content-area">
-                <section class="monthly-code-section card">
-                    <div class="section-title-container">
-                        <i class="fas fa-key"></i>
-                        <h2>This Month's Exclusive Code</h2>
+                <!-- Locked content wrapper -->
+                <div id="lockedContentContainer" class="locked-content-wrapper">
+                    <!-- Lock Overlay -->
+                    <div id="lockOverlay" class="lock-overlay">
+                        <i class="fas fa-lock lock-icon"></i>
+                        <h2>Content Locked</h2>
+                        <p>Enter this month's secret code to unlock exclusive patron resources and special content.</p>
+                        <input type="password" id="unlockCodeInput" placeholder="Enter unlock code">
+                        <div id="unlockError" class="unlock-error"></div>
+                        <button class="button button-warning" id="unlockButton">
+                            <i class="fas fa-unlock"></i> Unlock
+                        </button>
                     </div>
-                    <p class="code-explanation">
-                        As a valued patron, use this code to unlock premium features and content across my projects.
-                        This code refreshes automatically at the start of each month.
-                    </p>
-                    <div class="code-display" id="monthlyCodeDisplay">
-                        Loading Code...
-                    </div>
-                    <button class="button button-warning code-copy-button" onclick="copyCode()">
-                        <i class="far fa-copy"></i> Copy Code
-                    </button>
-                </section>
 
-                <hr class="section-divider">
+                    <section class="monthly-code-section card">
+                        <div class="section-title-container">
+                            <i class="fas fa-key"></i>
+                            <h2>This Month's Exclusive Code</h2>
+                        </div>
+                        <p class="code-explanation">
+                            As a valued patron, use this code to unlock premium features and content across my projects.
+                            This code refreshes automatically at the start of each month.
+                        </p>
+                        <div class="code-display" id="monthlyCodeDisplay">
+                            Loading Code...
+                        </div>
+                        <button class="button button-warning code-copy-button" onclick="copyCode()">
+                            <i class="far fa-copy"></i> Copy Code
+                        </button>
+                    </section>
 
-                <section id="premium-resources" class="paid-resources-section card">
-                    <div class="section-title-container">
-                        <i class="fas fa-crown"></i>
-                        <h2>Premium Patron Resources</h2>
-                    </div>
-                    <p class="section-description">
-                        Unlock the full potential of your campaigns with these exclusive resources, available only to my amazing patrons.
-                    </p>
-                    <div class="project-grid">
-                        <div class="project-card">
-                            <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/131695695/041a5641ba1a4e6aa272bf3ad681376f/eyJ3IjoxMDgwfQ%3D%3D/1.png?token-hash=rekRR6BF_O9kyacdWftsr6OwFrUR29VUZeHJTAf7BGI%3D&token-time=1753574400" alt="Wilderness Encounter Tokens & Art">
-                            <div class="project-card-content">
-                                <h3>Wilderness Encounter Tokens & Art</h3>
-                                <p>Enhanced encounter assets to bring your wilderness encounters to life.</p>
-                                <a href="https://www.patreon.com/posts/new-wilderness-131695695" class="button button-warning" target="_blank">
-                                    <i class="fas fa-arrow-right"></i> View Project
-                                </a>
+                    <hr class="section-divider">
+
+                    <section id="premium-resources" class="paid-resources-section card">
+                        <div class="section-title-container">
+                            <i class="fas fa-crown"></i>
+                            <h2>Premium Patron Resources</h2>
+                        </div>
+                        <p class="section-description">
+                            Unlock the full potential of your campaigns with these exclusive resources, available only to my amazing patrons.
+                        </p>
+                        <div class="project-grid">
+                            <div class="project-card">
+                                <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/131695695/041a5641ba1a4e6aa272bf3ad681376f/eyJ3IjoxMDgwfQ%3D%3D/1.png?token-hash=rekRR6BF_O9kyacdWftsr6OwFrUR29VUZeHJTAf7BGI%3D&token-time=1753574400" alt="Wilderness Encounter Tokens & Art">
+                                <div class="project-card-content">
+                                    <h3>Wilderness Encounter Tokens & Art</h3>
+                                    <p>Enhanced encounter assets to bring your wilderness encounters to life.</p>
+                                    <a href="https://www.patreon.com/posts/new-wilderness-131695695" class="button button-warning" target="_blank">
+                                        <i class="fas fa-arrow-right"></i> View Project
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="project-card">
+                                <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/132347412/e49851972b044a73a377b4ff1ce522eb/eyJ3IjoxMDgwfQ%3D%3D/1.png?token-hash=Idp-S7UgiwAXP1l8dQeksPuPSzjcmWhYtwvKEZD6kNw%3D&token-time=1753574400" alt="Icewind Dale One-shot - The Fear, Silence & Snow">
+                                <div class="project-card-content">
+                                    <h3>Icewind Dale One-shot: The Fear, Silence & Snow</h3>
+                                    <p>A complete one-shot adventure, with VTT maps for Roll20 & FoundryVTT coming soon!</p>
+                                    <a href="https://www.patreon.com/posts/fear-silence-one-132347412" class="button button-warning" target="_blank">
+                                        <i class="fas fa-arrow-right"></i> View Project
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="project-card">
+                                <div class="video-container">
+                                    <iframe
+                                        src="https://www.youtube.com/embed/ezlGT370qTU?autoplay=1&mute=1&controls=0&loop=1&playlist=ezlGT370qTU"
+                                        frameborder="0"
+                                        allow="autoplay; encrypted-media"
+                                        allowfullscreen
+                                    ></iframe>
+                                </div>
+                                <div class="project-card-content">
+                                    <h3>D&D Command Centre</h3>
+                                    <p>Powerful D&D tools for automating your prep both in-person and online.</p>
+                                    <a href="https://www.patreon.com/posts/exclusive-access-133747915" class="button button-warning" target="_blank">
+                                        <i class="fas fa-arrow-right"></i> View Project
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="project-card">
+                                <img src="https://i.imgur.com/bH2dQlJ.png" alt="D&D Initiative Tracker with API">
+                                <div class="project-card-content">
+                                    <h3>D&D Initiative Tracker with API</h3>
+                                    <p>Effortless combatant management, intuitive initiative tracking, HP & conditions, and a built-in dice roller.</p>
+                                    <a href="https://dndtracker.nat20.live/" class="button button-warning" target="_blank">
+                                        <i class="fas fa-arrow-right"></i> Launch App
+                                    </a>
+                                </div>
                             </div>
                         </div>
-                        <div class="project-card">
-                            <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/132347412/e49851972b044a73a377b4ff1ce522eb/eyJ3IjoxMDgwfQ%3D%3D/1.png?token-hash=Idp-S7UgiwAXP1l8dQeksPuPSzjcmWhYtwvKEZD6kNw%3D&token-time=1753574400" alt="Icewind Dale One-shot - The Fear, Silence & Snow">
-                            <div class="project-card-content">
-                                <h3>Icewind Dale One-shot: The Fear, Silence & Snow</h3>
-                                <p>A complete one-shot adventure, with VTT maps for Roll20 & FoundryVTT coming soon!</p>
-                                <a href="https://www.patreon.com/posts/fear-silence-one-132347412" class="button button-warning" target="_blank">
-                                    <i class="fas fa-arrow-right"></i> View Project
-                                </a>
-                            </div>
-                        </div>
-                        <div class="project-card">
-                            <div class="video-container">
-                                <iframe
-                                    src="https://www.youtube.com/embed/ezlGT370qTU?autoplay=1&mute=1&controls=0&loop=1&playlist=ezlGT370qTU"
-                                    frameborder="0"
-                                    allow="autoplay; encrypted-media"
-                                    allowfullscreen
-                                ></iframe>
-                            </div>
-                            <div class="project-card-content">
-                                <h3>D&D Command Centre</h3>
-                                <p>Powerful D&D tools for automating your prep both in-person and online.</p>
-                                <a href="https://www.patreon.com/posts/exclusive-access-133747915" class="button button-warning" target="_blank">
-                                    <i class="fas fa-arrow-right"></i> View Project
-                                </a>
-                            </div>
-                        </div>
-                        <div class="project-card">
-                            <img src="https://i.imgur.com/bH2dQlJ.png" alt="D&D Initiative Tracker with API">
-                            <div class="project-card-content">
-                                <h3>D&D Initiative Tracker with API</h3>
-                                <p>Effortless combatant management, intuitive initiative tracking, HP & conditions, and a built-in dice roller.</p>
-                                <a href="https://dndtracker.nat20.live/" class="button button-warning" target="_blank">
-                                    <i class="fas fa-arrow-right"></i> Launch App
-                                </a>
-                            </div>
-                        </div>
-                        <div class="project-card">
-                            <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/131478506/9e7504da1c214ad8aa24c330e218d29d/eyJ3IjoxMDgwfQ%3D%3D/1.gif?token-hash=jeThcgtB3ynNOb8wg2BQrpabDJn-_Uk98RKERSJkNgY%3D&token-time=1753574400" alt="Foundry VTT GM Macros">
-                            <div class="project-card-content">
-                                <h3>Premium Icewind Dale Macros (Foundry VTT)</h3>
-                                <p>Advanced macros for Foundry VTT, specifically designed to enhance your Icewind Dale campaigns.</p>
-                                <a href="https://shorturl.at/5P9hk" class="button button-warning" target="_blank">
-                                    <i class="fas fa-download"></i> Get Manifest URL
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                    </section>
+                </div> <!-- End locked-content-wrapper -->
 
                 <hr class="section-divider">
 
@@ -194,9 +356,10 @@
                             <div class="project-card-content">
                                 <h3>Foundry VTT GM Macros</h3>
                                 <p>Macros for light control, dice rolls, token teleporting, and streamlining travel for your Foundry VTT campaigns.</p>
-                                <a href="http://tiny.cc/o8ym001" class="button button-warning" target="_blank">
-                                    <i class="fas fa-download"></i> Get Manifest URL
-                                </a>
+                                <!-- Changed from href to onclick for copy to clipboard -->
+                                <button class="button button-warning" onclick="copyManifestUrl('http://tiny.cc/o8ym001', this)">
+                                    <i class="fas fa-download"></i> Copy Manifest URL
+                                </button>
                             </div>
                         </div>
                         <div class="project-card">
@@ -214,13 +377,14 @@
                             <div class="project-card-content">
                                 <h3>Owlbear Rodeo NPC Realm Generator (Extension)</h3>
                                 <p>Generate NPCs on the fly for your Owlbear Rodeo sessions.</p>
-                                <a href="https://raw.githubusercontent.com/Jimpeccable/NPC-Generator-OBR/refs/heads/NPC-Generator-OBR-1.0.2/manifest.json" class="button button-warning" target="_blank">
-                                    <i class="fas fa-download"></i> Get Manifest URL
-                                </a>
+                                <!-- Changed from href to onclick for copy to clipboard -->
+                                <button class="button button-warning" onclick="copyManifestUrl('https://raw.githubusercontent.com/Jimpeccable/NPC-Generator-OBR/refs/heads/NPC-Generator-OBR-1.0.2/manifest.json', this)">
+                                    <i class="fas fa-download"></i> Copy Manifest URL
+                                </button>
                             </div>
                         </div>
                         <div class="project-card">
-                            <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/114950898/16a4aabe85cf453690868be5867293d5/eyJ3IjoxMDgwfQ%3D%3D/1.jpg?token-hash=MBYuiFxYg-Jqge8zyHjy1Xot8rPnk31gE3NZngNp7f8%3D&token-time=1753574400" alt="Art Dumping Ground">
+                            <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/114950898/16a4aabe85cf4453690868be5867293d5/eyJ3IjoxMDgwfQ%3D%3D/1.jpg?token-hash=MBYuiFxYg-Jqge8zyHjy1Xot8rPnk31gE3NZngNp7f8%3D&token-time=1753574400" alt="Art Dumping Ground">
                             <div class="project-card-content">
                                 <h3>Art & AI Content Dumping Ground</h3>
                                 <p>A collection of art and AI-generated content used in my campaigns, free for your use!</p>
@@ -281,123 +445,137 @@
             color2: 0x303030 // Lighter dark color
         });
 
-// Simple SHA-256 implementation for GitHub Pages compatibility
-function sha256(str) {
-    function rightRotate(value, amount) {
-        return (value >>> amount) | (value << (32 - amount));
-    }
-    
-    function sha256Hash(ascii) {
-        const mathPow = Math.pow;
-        const maxWord = mathPow(2, 32);
-        const lengthProperty = 'length';
-        let i, j;
-        let result = '';
-        
-        const words = [];
-        const asciiBitLength = ascii[lengthProperty] * 8;
-        
-        let hash = sha256Hash.h = sha256Hash.h || [];
-        const k = sha256Hash.k = sha256Hash.k || [];
-        let primeCounter = k[lengthProperty];
-        
-        const isComposite = {};
-        for (let candidate = 2; primeCounter < 64; candidate++) {
-            if (!isComposite[candidate]) {
-                for (i = 0; i < 313; i += candidate) {
-                    isComposite[i] = candidate;
+        // Simple SHA-256 implementation for GitHub Pages compatibility
+        function sha256(str) {
+            function rightRotate(value, amount) {
+                return (value >>> amount) | (value << (32 - amount));
+            }
+
+            function sha256Hash(ascii) {
+                const mathPow = Math.pow;
+                const maxWord = mathPow(2, 32);
+                const lengthProperty = 'length';
+                let i, j;
+                let result = '';
+
+                const words = [];
+                const asciiBitLength = ascii[lengthProperty] * 8;
+
+                let hash = sha256Hash.h = sha256Hash.h || [];
+                const k = sha256Hash.k = sha256Hash.k || [];
+                let primeCounter = k[lengthProperty];
+
+                const isComposite = {};
+                for (let candidate = 2; primeCounter < 64; candidate++) {
+                    if (!isComposite[candidate]) {
+                        for (i = 0; i < 313; i += candidate) {
+                            isComposite[i] = candidate;
+                        }
+                        hash[primeCounter] = (mathPow(candidate, .5) * maxWord) | 0;
+                        k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
+                    }
                 }
-                hash[primeCounter] = (mathPow(candidate, .5) * maxWord) | 0;
-                k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
-            }
-        }
-        
-        ascii += '\x80';
-        while (ascii[lengthProperty] % 64 - 56) ascii += '\x00';
-        for (i = 0; i < ascii[lengthProperty]; i++) {
-            j = ascii.charCodeAt(i);
-            if (j >> 8) return;
-            words[i >> 2] |= j << ((3 - i) % 4) * 8;
-        }
-        words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);
-        words[words[lengthProperty]] = (asciiBitLength);
-        
-        for (j = 0; j < words[lengthProperty];) {
-            const w = words.slice(j, j += 16);
-            const oldHash = hash;
-            hash = hash.slice(0, 8);
-            
-            for (i = 0; i < 64; i++) {
-                const i2 = i + j;
-                const w15 = w[i - 15], w2 = w[i - 2];
-                
-                const a = hash[0], e = hash[4];
-                const temp1 = hash[7]
-                    + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
-                    + ((e & hash[5]) ^ ((~e) & hash[6]))
-                    + k[i]
-                    + (w[i] = (i < 16) ? w[i] : (
-                        w[i - 16]
-                        + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
-                        + w[i - 7]
-                        + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
-                    ) | 0
-                    );
-                const temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
-                    + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
-                
-                hash = [(temp1 + temp2) | 0].concat(hash);
-                hash[4] = (hash[4] + temp1) | 0;
-            }
-            
-            for (i = 0; i < 8; i++) {
-                hash[i] = (hash[i] + oldHash[i]) | 0;
-            }
-        }
-        
-        for (i = 0; i < 8; i++) {
-            for (j = 3; j + 1; j--) {
-                const b = (hash[i] >> (j * 8)) & 255;
-                result += ((b < 16) ? 0 : '') + b.toString(16);
-            }
-        }
-        return result;
-    }
-    
-    return sha256Hash(str);
-}
 
-// Try the most likely secret key based on your original code
-const MONTHLY_CODE_SECRET = "D&DTrackerSecretKey2025!";
+                ascii += '\x80';
+                while (ascii[lengthProperty] % 64 - 56) ascii += '\x00';
+                for (i = 0; i < ascii[lengthProperty]; i++) {
+                    j = ascii.charCodeAt(i);
+                    if (j >> 8) return;
+                    words[i >> 2] |= j << ((3 - i) % 4) * 8;
+                }
+                words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);
+                words[words[lengthProperty]] = (asciiBitLength);
 
-function generateMonthlyCode() {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    
-    const inputString = `${MONTHLY_CODE_SECRET}-${year}-${month}`;
-    const hexHash = sha256(inputString);
-    
-    // Extract only alphanumeric characters and take first 8
-    const alphanumericHash = hexHash.replace(/[^a-zA-Z0-9]/g, '');
-    return alphanumericHash.substring(0, 8).toUpperCase();
-}
+                for (j = 0; j < words[lengthProperty];) {
+                    const w = words.slice(j, j += 16);
+                    const oldHash = hash;
+                    hash = hash.slice(0, 8);
 
-// Generate the code
-console.log("Generated code:", generateMonthlyCode());
+                    for (i = 0; i < 64; i++) {
+                        const i2 = i + j;
+                        const w15 = w[i - 15], w2 = w[i - 2];
 
-        // Function to update the displayed code
+                        const a = hash[0], e = hash[4];
+                        const temp1 = hash[7]
+                            + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+                            + ((e & hash[5]) ^ ((~e) & hash[6]))
+                            + k[i]
+                            + (w[i] = (i < 16) ? w[i] : (
+                                w[i - 16]
+                                + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
+                                + w[i - 7]
+                                + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
+                            ) | 0
+                            );
+                        const temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+                            + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+
+                        hash = [(temp1 + temp2) | 0].concat(hash);
+                        hash[4] = (hash[4] + temp1) | 0;
+                    }
+
+                    for (i = 0; i < 8; i++) {
+                        hash[i] = (hash[i] + oldHash[i]) | 0;
+                    }
+                }
+
+                for (i = 0; i < 8; i++) {
+                    for (j = 3; j + 1; j--) {
+                        const b = (hash[i] >> (j * 8)) & 255;
+                        result += ((b < 16) ? 0 : '') + b.toString(16);
+                    }
+                    }
+                return result;
+            }
+
+            return sha256Hash(str);
+        }
+
+        // Monthly Code Generation (Existing Logic)
+        const MONTHLY_CODE_SECRET = "D&DTrackerSecretKey2025!";
+        const UNLOCK_SECRET_PHRASE = "JIMPECCABLEUNLOCKSECRET!"; // NEW secret for the padlock
+
+        const CODE_LENGTH = 8; // Both codes are 8 characters long
+
+        function generateMonthlyCode(date) {
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+
+            const inputString = `${MONTHLY_CODE_SECRET}-${year}-${month}`;
+            const hexHash = sha256(inputString);
+
+            const alphanumericHash = hexHash.replace(/[^a-zA-Z0-9]/g, '');
+            return alphanumericHash.substring(0, CODE_LENGTH).toUpperCase();
+        }
+
+        // NEW: Generate the monthly-cycling Unlock Code
+        function generateUnlockCode(date) {
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+
+            // Use a *different* secret phrase for the unlock code
+            const inputString = `${UNLOCK_SECRET_PHRASE}-${year}-${month}`;
+            const hexHash = sha256(inputString);
+
+            const alphanumericHash = hexHash.replace(/[^a-zA-Z0-9]/g, '');
+            return alphanumericHash.substring(0, CODE_LENGTH).toUpperCase();
+        }
+
+        // Function to update the displayed monthly code
         function updateMonthlyCodeDisplay() {
             const codeDisplayElement = document.getElementById('monthlyCodeDisplay');
-            codeDisplayElement.textContent = generateMonthlyCode();
+            if (codeDisplayElement) {
+                codeDisplayElement.textContent = generateMonthlyCode(new Date());
+            }
         }
 
-        // Function to copy the code to clipboard
+        // Function to copy the monthly exclusive code to clipboard
         function copyCode() {
             const codeDisplayElement = document.getElementById('monthlyCodeDisplay');
+            if (!codeDisplayElement) return;
+
             const code = codeDisplayElement.textContent;
 
-            // Use document.execCommand('copy') for better compatibility in iframes
             const tempInput = document.createElement('textarea');
             tempInput.value = code;
             document.body.appendChild(tempInput);
@@ -405,41 +583,107 @@ console.log("Generated code:", generateMonthlyCode());
             document.execCommand('copy');
             document.body.removeChild(tempInput);
 
-            // Provide visual feedback
             const originalText = codeDisplayElement.textContent;
             codeDisplayElement.textContent = 'COPIED!';
             setTimeout(() => {
                 codeDisplayElement.textContent = originalText;
-            }, 1500); // Revert after 1.5 seconds
+            }, 1500);
         }
 
-        // Initial code display on load
-        document.addEventListener('DOMContentLoaded', updateMonthlyCodeDisplay);
+        // NEW: Function to copy Manifest URL to clipboard
+        function copyManifestUrl(url, buttonElement) {
+            const tempInput = document.createElement('textarea');
+            tempInput.value = url;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
 
-        // Set up interval to update code at the start of each month (or daily for testing/robustness)
-        // Check once every 24 hours. This client-side check is a fallback; server-side generation is ideal for strict monthly refresh.
-        setInterval(() => {
+            const originalText = buttonElement.innerHTML; // Store original button content
+            buttonElement.innerHTML = '<i class="fas fa-check"></i> COPIED!'; // Change button text to indicate success
+            setTimeout(() => {
+                buttonElement.innerHTML = originalText; // Revert button text after 1.5 seconds
+            }, 1500);
+        }
+
+
+        // --- Unlock Logic (Modified for monthly refresh) ---
+        function applyLockState() {
+            const lockOverlay = document.getElementById('lockOverlay');
             const currentDate = new Date();
             const currentMonthUTC = currentDate.getUTCMonth();
             const currentYearUTC = currentDate.getUTCFullYear();
 
-            // Store the last month/year the code was generated for (using UTC for consistency)
-            const lastGeneratedMonthUTC = localStorage.getItem('lastGeneratedMonthUTC');
-            const lastGeneratedYearUTC = localStorage.getItem('lastGeneratedYearUTC');
+            const lastUnlockedMonthUTC = localStorage.getItem('jimpeccableUnlockedMonthUTC');
+            const lastUnlockedYearUTC = localStorage.getItem('jimpeccableUnlockedYearUTC');
 
-            if (currentMonthUTC.toString() !== lastGeneratedMonthUTC || currentYearUTC.toString() !== lastGeneratedYearUTC) {
-                updateMonthlyCodeDisplay();
-                localStorage.setItem('lastGeneratedMonthUTC', currentMonthUTC.toString());
-                localStorage.setItem('lastGeneratedYearUTC', currentYearUTC.toString());
+            // Check if content was previously unlocked AND if it's the same month/year
+            const isUnlockedForCurrentMonth = (
+                localStorage.getItem('jimpeccableUnlocked') === 'true' &&
+                currentMonthUTC.toString() === lastUnlockedMonthUTC &&
+                currentYearUTC.toString() === lastUnlockedYearUTC
+            );
+
+            if (isUnlockedForCurrentMonth) {
+                lockOverlay.classList.add('hidden');
+                updateMonthlyCodeDisplay(); // Update monthly code only if unlocked
+            } else {
+                // If not unlocked for current month, ensure overlay is visible and clear old unlock state
+                lockOverlay.classList.remove('hidden');
+                localStorage.removeItem('jimpeccableUnlocked');
+                localStorage.removeItem('jimpeccableUnlockedMonthUTC');
+                localStorage.removeItem('jimpeccableUnlockedYearUTC');
             }
-        }, 1000 * 60 * 60 * 24); // Check once every 24 hours
-
-        // On initial load, set the last generated month/year if not already set
-        if (!localStorage.getItem('lastGeneratedMonthUTC')) {
-            const date = new Date();
-            localStorage.setItem('lastGeneratedMonthUTC', date.getUTCMonth().toString());
-            localStorage.setItem('lastGeneratedYearUTC', date.getUTCFullYear().toString());
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const lockOverlay = document.getElementById('lockOverlay');
+            const unlockCodeInput = document.getElementById('unlockCodeInput');
+            const unlockButton = document.getElementById('unlockButton');
+            const unlockError = document.getElementById('unlockError');
+
+            // Apply initial lock state based on current date and stored state
+            applyLockState();
+
+            // Event listener for the unlock button
+            if (unlockButton) {
+                unlockButton.addEventListener('click', () => {
+                    const enteredCode = unlockCodeInput.value.trim().toUpperCase();
+                    const expectedCode = generateUnlockCode(new Date()); // Generate for current date
+
+                    if (enteredCode === expectedCode) {
+                        lockOverlay.classList.add('hidden');
+                        localStorage.setItem('jimpeccableUnlocked', 'true');
+                        const currentDate = new Date();
+                        localStorage.setItem('jimpeccableUnlockedMonthUTC', currentDate.getUTCMonth().toString());
+                        localStorage.setItem('jimpeccableUnlockedYearUTC', currentDate.getUTCFullYear().toString());
+                        unlockError.classList.remove('show');
+                        updateMonthlyCodeDisplay(); // Update monthly code after unlocking
+                    } else {
+                        unlockError.textContent = 'Incorrect code. Please try again.';
+                        unlockError.classList.add('show');
+                        unlockCodeInput.classList.add('shake');
+                        setTimeout(() => {
+                            unlockCodeInput.classList.remove('shake');
+                        }, 500);
+                    }
+                });
+            }
+
+            // Allow unlocking with Enter key in the input field
+            if (unlockCodeInput) {
+                unlockCodeInput.addEventListener('keyup', (event) => {
+                    if (event.key === 'Enter') {
+                        unlockButton.click();
+                    }
+                });
+            }
+
+            // Set up interval to check for month change and re-lock if needed
+            setInterval(() => {
+                applyLockState(); // Re-evaluate lock state daily
+            }, 1000 * 60 * 60 * 24); // Check once every 24 hours
+        });
     </script>
 </body>
 </html>
