@@ -163,6 +163,44 @@
                 font-size: 0.9em;
             }
         }
+
+        /* Styles for the new banner image */
+        .member-perks-banner {
+            width: 100%;
+            height: auto; /* Maintain aspect ratio */
+            border-radius: 8px;
+            margin-bottom: 20px; /* Space below the banner */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Unified media container for consistent sizing */
+        .project-card-media {
+            width: 100%;
+            height: 150px; /* Consistent height for all media */
+            overflow: hidden; /* Hide parts of image/video that go outside */
+            border-radius: 8px 8px 0 0; /* Match card top corners */
+            display: flex; /* For centering content if needed */
+            justify-content: center;
+            align-items: center;
+            background-color: var(--color-background-dark); /* Fallback background */
+        }
+
+        .project-card-media img,
+        .project-card-media iframe {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Make images/videos cover the area */
+            display: block;
+        }
+
+        /* Ensure the tracking pixel doesn't interfere with layout */
+        .project-card .tracking-pixel {
+            position: absolute;
+            visibility: hidden;
+            height: 0;
+            width: 0;
+        }
+
     </style>
 </head>
 <body>
@@ -177,6 +215,7 @@
             <nav class="quick-nav">
                 <a href="#premium-resources"><i class="fas fa-crown"></i> Member Exclusive</a>
                 <a href="#free-resources"><i class="fas fa-gift"></i> Free Content</a>
+                <a href="#member-perks"><i class="fas fa-star"></i> Member Perks</a>
             </nav>
         </header>
 
@@ -237,7 +276,9 @@
                         </p>
                         <div class="project-grid">
                             <div class="project-card">
-                                <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/131695695/041a5641ba1a4e6aa272bf3ad681376f/eyJ3IjoxMDgwfQ%3D%3D/1.png?token-hash=rekRR6BF_O9kyacdWftsr6OwFrUR29VUZeHJTAf7BGI%3D&token-time=1753574400" alt="Wilderness Encounter Tokens & Art">
+                                <div class="project-card-media">
+                                    <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/131695695/041a5641ba1a4e6aa272bf3ad681376f/eyJ3IjoxMDgwfQ%3D%3D/1.png?token-hash=rekRR6BF_O9kyacdWftsr6OwFrUR29VUZeHJTAf7BGI%3D&token-time=1753574400" alt="Wilderness Encounter Tokens & Art">
+                                </div>
                                 <div class="project-card-content">
                                     <h3>Wilderness Encounter Tokens & Art</h3>
                                     <p>Enhanced encounter assets to bring your wilderness encounters to life.</p>
@@ -247,7 +288,9 @@
                                 </div>
                             </div>
                             <div class="project-card">
-                                <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/132347412/e49851972b044a73a377b4ff1ce522eb/eyJ3IjoxMDgwfQ%3D%3D/1.png?token-hash=Idp-S7UgiwAXP1l8dQeksPuPSzjcmWhYtwvKEZD6kNw%3D&token-time=1753574400" alt="Icewind Dale One-shot - The Fear, Silence & Snow">
+                                <div class="project-card-media">
+                                    <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/132347412/e49851972b044a73a377b4ff1ce522eb/eyJ3IjoxMDgwfQ%3D%3D/1.png?token-hash=Idp-S7UgiwAXP1l8dQeksPuPSzjcmWhYtwvKEZD6kNw%3D&token-time=1753574400" alt="Icewind Dale One-shot - The Fear, Silence & Snow">
+                                </div>
                                 <div class="project-card-content">
                                     <h3>Icewind Dale One-shot: The Fear, Silence & Snow</h3>
                                     <p>A complete one-shot adventure, with VTT maps for Roll20 & FoundryVTT coming soon!</p>
@@ -257,13 +300,15 @@
                                 </div>
                             </div>
                             <div class="project-card">
-                                <div class="video-container">
-                                    <iframe
-                                        src="https://www.youtube.com/embed/ezlGT370qTU?autoplay=1&mute=1&controls=0&loop=1&playlist=ezlGT370qTU"
-                                        frameborder="0"
-                                        allow="autoplay; encrypted-media"
-                                        allowfullscreen
-                                    ></iframe>
+                                <div class="project-card-media">
+                                    <div class="video-container">
+                                        <iframe
+                                            src="https://www.youtube.com/embed/ezlGT370qTU?autoplay=1&mute=1&controls=0&loop=1&playlist=ezlGT370qTU"
+                                            frameborder="0"
+                                            allow="autoplay; encrypted-media"
+                                            allowfullscreen
+                                        ></iframe>
+                                    </div>
                                 </div>
                                 <div class="project-card-content">
                                     <h3>D&D Command Centre</h3>
@@ -274,7 +319,9 @@
                                 </div>
                             </div>
                             <div class="project-card">
-                                <img src="https://i.imgur.com/bH2dQlJ.png" alt="D&D Initiative Tracker with API">
+                                <div class="project-card-media">
+                                    <img src="https://i.imgur.com/bH2dQlJ.png" alt="D&D Initiative Tracker with API">
+                                </div>
                                 <div class="project-card-content">
                                     <h3>D&D Initiative Tracker with API</h3>
                                     <p>Effortless combatant management, intuitive initiative tracking, HP & conditions, and a built-in dice roller.</p>
@@ -299,7 +346,9 @@
                     </p>
                     <div class="project-grid">
                         <div class="project-card">
-                            <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/131587088/efb624353eda416fa9dbf7d5b36939ed/eyJ3IjoxMDgwfQ%3D%3D/1.png?token-hash=9u4hFHSaWp9864InGazAubVbSTb5O-SrUJOjPzXsDSI%3D&token-time=1753574400" alt="Icewind Dale Posters">
+                            <div class="project-card-media">
+                                <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/131587088/efb624353eda416fa9dbf7d5b36939ed/eyJ3IjoxMDgwfQ%3D%3D/1.png?token-hash=9u4hFHSaWp9864InGazAubVbSTb5O-SrUJOjPzXsDSI%3D&token-time=1753574400" alt="Icewind Dale Posters">
+                            </div>
                             <div class="project-card-content">
                                 <h3>Icewind Dale Posters</h3>
                                 <p>Atmospheric posters to enhance your campaign. Print them out or use them digitally!</p>
@@ -309,7 +358,9 @@
                             </div>
                         </div>
                         <div class="project-card">
-                            <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/131539068/2573e0e77921457f9368264bab6f49b1/eyJ3IjoxMDgwfQ%3D%3D/1.png?token-hash=w-K3BDMEXc6t8iUrB2aZXKmKsgWpfV6Uy4M6UkC89yE%3D&token-time=1753574400" alt="Bryn Shander Newspaper">
+                            <div class="project-card-media">
+                                <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/131539068/2573e0e77921457f9368264bab6f49b1/eyJ3IjoxMDgwfQ%3D%3D/1.png?token-hash=w-K3BDMEXc6t8iUrB2aZXKmKsgWpfV6Uy4M6UkC89yE%3D&token-time=1753574400" alt="Bryn Shander Newspaper">
+                            </div>
                             <div class="project-card-content">
                                 <h3>Bryn Shander Newspaper</h3>
                                 <p>Add some local flavor to your sessions with this immersive newspaper handout.</p>
@@ -319,7 +370,9 @@
                             </div>
                         </div>
                         <div class="project-card">
-                            <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/133582409/835166cbba474aca8eec047db313c89f/eyJ3IjoxMDgwfQ%3D%3D/1.png?token-hash=9lgcihFbkl4dGzb1DYy3tfNa1EaZE3dyJ3mCSePyxUI%3D&token-time=1753574400" alt="Bryn Shander Speakers Podium (3D Printable)">
+                            <div class="project-card-media">
+                                <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/133582409/835166cbba474aca8eec047db313c89f/eyJ3IjoxMDgwfQ%3D%3D/1.png?token-hash=9lgcihFbkl4dGzb1DYy3tfNa1EaZE3dyJ3mCSePyxUI%3D&token-time=1753574400" alt="Bryn Shander Speakers Podium (3D Printable)">
+                            </div>
                             <div class="project-card-content">
                                 <h3>Bryn Shander Speakers Podium (3D Printable)</h3>
                                 <p>A free 3D printable .OBJ file to bring your tabletop to life.</p>
@@ -329,7 +382,9 @@
                             </div>
                         </div>
                         <div class="project-card">
-                            <img src="https://i.imgur.com/q5TlC3I.png" alt="Black Cabin Art / Isometric">
+                            <div class="project-card-media">
+                                <img src="https://i.imgur.com/q5TlC3I.png" alt="Black Cabin Art / Isometric">
+                            </div>
                             <div class="project-card-content">
                                 <h3>Black Cabin Art / Isometric</h3>
                                 <p>Stunning art pieces to set the scene for your Black Cabin encounters.</p>
@@ -342,7 +397,9 @@
                             </div>
                         </div>
                         <div class="project-card">
-                            <img src="https://i.imgur.com/kTmlInH.png" alt="Black Cabin Player Handout">
+                            <div class="project-card-media">
+                                <img src="https://i.imgur.com/kTmlInH.png" alt="Black Cabin Player Handout">
+                            </div>
                             <div class="project-card-content">
                                 <h3>Black Cabin Player Handout</h3>
                                 <p>A chilling handout for players who meet an untimely demise in the Black Cabin.</p>
@@ -352,7 +409,9 @@
                             </div>
                         </div>
                         <div class="project-card">
-                            <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/131478506/9e7504da1c214ad8aa24c330e218d29d/eyJ3IjoxMDgwfQ%3D%3D/1.gif?token-hash=jeThcgtB3ynNOb8wg2BQrpabDJn-_Uk98RKERSJkNgY%3D&token-time=1753574400" alt="Foundry VTT GM Macros">
+                            <div class="project-card-media">
+                                <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/131478506/9e7504da1c214ad8aa24c330e218d29d/eyJ3IjoxMDgwfQ%3D%3D/1.gif?token-hash=jeThcgtB3ynNOb8wg2BQrpabDJn-_Uk98RKERSJkNgY%3D&token-time=1753574400" alt="Foundry VTT GM Macros">
+                            </div>
                             <div class="project-card-content">
                                 <h3>Foundry VTT GM Macros</h3>
                                 <p>Macros for light control, dice rolls, token teleporting, and streamlining travel for your Foundry VTT campaigns.</p>
@@ -363,7 +422,9 @@
                             </div>
                         </div>
                         <div class="project-card">
-                            <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/131479029/bbb505a05a884230bd24c17d2078ac5a/eyJ3IjoxMDgwfQ%3D%3D/1.png?token-hash=UCtUp44a5mhICwDOqJRYqvUBv_a2kv9oG8JJi-K5E-Q%3D&token-time=1753574400" alt="Curse of Strahd DM Cheat Sheet (Web)">
+                            <div class="project-card-media">
+                                <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/131479029/bbb505a05a884230bd24c17d2078ac5a/eyJ3IjoxMDgwfQ%3D%3D/1.png?token-hash=UCtUp44a5mhICwDOqJRYqvUBv_a2kv9oG8JJi-K5E-Q%3D&token-time=1753574400" alt="Curse of Strahd DM Cheat Sheet (Web)">
+                            </div>
                             <div class="project-card-content">
                                 <h3>Curse of Strahd DM Cheat Sheet (Web)</h3>
                                 <p>Quick reference for running CoS with nightmare mechanics, despair, and gaslighting techniques.</p>
@@ -373,7 +434,9 @@
                             </div>
                         </div>
                         <div class="project-card">
-                            <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/113877786/f426a3dc614944b0b5dc48afd6205b5a/eyJ3IjoxMDgwfQ%3D%3D/1.png?token-hash=UpVX6xkYicWKkWoUBiAsSySxDrZ1WVHi4eK84Kd2CeA%3D&token-time=1753574400" alt="Owlbear Rodeo NPC Realm Generator (Extension)">
+                            <div class="project-card-media">
+                                <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/113877786/f426a3dc614944b0b5dc48afd6205b5a/eyJ3IjoxMDgwfQ%3D%3D/1.png?token-hash=UpVX6xkYicWKkWoUBiAsSySxDrZ1WVHi4eK84Kd2CeA%3D&token-time=1753574400" alt="Owlbear Rodeo NPC Realm Generator (Extension)">
+                            </div>
                             <div class="project-card-content">
                                 <h3>Owlbear Rodeo NPC Realm Generator (Extension)</h3>
                                 <p>Generate NPCs on the fly for your Owlbear Rodeo sessions.</p>
@@ -384,12 +447,61 @@
                             </div>
                         </div>
                         <div class="project-card">
-                            <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/114950898/16a4aabe85cf4453690868be5867293d5/eyJ3IjoxMDgwfQ%3D%3D/1.jpg?token-hash=MBYuiFxYg-Jqge8zyHjy1Xot8rPnk31gE3NZngNp7f8%3D&token-time=1753574400" alt="Art Dumping Ground">
+                            <div class="project-card-media">
+                                <img src="https://c10.patreonusercontent.com/4/patreon-media/p/post/114950898/16a4aabe85cf453690868be5867293d5/eyJ3IjoxMDgwfQ%3D%3D/1.jpg?token-hash=MBYuiFxYg-Jqge8zyHjy1Xot8rPnk31gE3NZngNp7f8%3D&token-time=1753574400" alt="Art Dumping Ground">
+                            </div>
                             <div class="project-card-content">
                                 <h3>Art & AI Content Dumping Ground</h3>
                                 <p>A collection of art and AI-generated content used in my campaigns, free for your use!</p>
                                 <a href="https://drive.google.com/drive/folders/10MmCN3tf_rx6kELNKjxJXnlPXQndq37d?usp=sharing" class="button button-warning" target="_blank">
                                     <i class="fas fa-folder-open"></i> Access Drive
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <hr class="section-divider">
+
+                <!-- New Member Perks Section -->
+                <section id="member-perks" class="member-perks-section card">
+                    <div class="section-title-container">
+                        <i class="fas fa-star"></i>
+                        <h2>Exclusive Member Perks</h2>
+                    </div>
+                    <p class="section-description">
+                        Discover incredible discounts and special offers from my favorite partners, exclusively for Jimpeccable's patrons!
+                    </p>
+                    <img src="https://i.imgur.com/EosoGLK.png" alt="Member Perks Banner" class="member-perks-banner">
+
+                    <div class="project-grid">
+                        <div class="project-card">
+                            <div class="project-card-media">
+                                <img src="https://www.monumentstudios.net/images/stream-tile-image.png" alt="Monument Studios Fantasy+">
+                            </div>
+                            <div class="project-card-content">
+                                <h3>Monument Studios: Fantasy+</h3>
+                                <p>Unlock powerful TTRPG audio to immerse your players in epic adventures.</p>
+                                <div class="code-display" style="font-size: 1.2em; letter-spacing: 1px; margin-top: 10px;">
+                                    Code: Incoming
+                                </div>
+                                <a href="https://www.monumentstudios.net/pages/fantasy+" class="button button-warning" target="_blank" style="margin-top: 15px;">
+                                    <i class="fas fa-external-link-alt"></i> Visit Site
+                                </a>
+                            </div>
+                        </div>
+                        <div class="project-card">
+                            <div class="project-card-media">
+                                <a rel="sponsored" href="https://worldanvil.pxf.io/c/6381096/1601963/10846" target="_top">
+                                    <img src="https://i0.wp.com/blog.worldanvil.com/wp-content/uploads/2018/06/header.png?resize=1024%2C512" border="0" alt="World Anvil"/>
+                                </a>
+                            </div>
+                            <img height="0" width="0" src="https://imp.pxf.io/i/6381096/1601963/10846" style="position:absolute;visibility:hidden;" border="0" class="tracking-pixel" />
+                            <div class="project-card-content">
+                                <h3>World Anvil</h3>
+                                <p>Build your worlds, manage your campaigns, and bring your stories to life with powerful tools.</p>
+                                <a href="https://worldanvil.pxf.io/c/6381096/1601963/10846" class="button button-warning" target="_blank">
+                                    <i class="fas fa-external-link-alt"></i> Visit Site
                                 </a>
                             </div>
                         </div>
@@ -524,7 +636,7 @@
                         const b = (hash[i] >> (j * 8)) & 255;
                         result += ((b < 16) ? 0 : '') + b.toString(16);
                     }
-                    }
+                }
                 return result;
             }
 
