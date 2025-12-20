@@ -4,17 +4,101 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jimpeccable's Patreon Projects Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+    
+    <!-- External Dependencies -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.cells.min.js"></script>
+    
     <style>
-        /* New styles for the lock overlay */
+        :root {
+            --apple-blue: #0A84FF;
+            --apple-green: #30D158;
+            --soft-gold: #FFD60A;
+            --patreon-red: #FF424D;
+            --glass-surface: rgba(26, 26, 26, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --color-red: #FF453A;
+        }
+
+        body {
+            background-color: #000000;
+            color: #E5E5E5;
+            font-family: 'Inter', -apple-system, sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        #vanta-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        .header-glass {
+            background: rgba(15, 15, 15, 0.8);
+            backdrop-filter: blur(40px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .glass-card {
+            background: var(--glass-surface);
+            backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card-heavy {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(60px) saturate(120%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .hero-title {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            color: #FFFFFF;
+        }
+
+        .project-card {
+            transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .project-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
+        }
+
+        .card-image-wrapper {
+            aspect-ratio: 16 / 9;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 600ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .project-card:hover .card-image {
+            transform: scale(1.05);
+        }
+
+        /* LOCK SYSTEM CSS */
         .locked-content-wrapper {
-            position: relative; /* Essential for positioning the absolute overlay */
-            min-height: 500px; /* Ensure enough height for the overlay to cover */
-            display: flex;
-            flex-direction: column;
-            gap: 20px; /* Keep consistent gap between sections within the wrapper */
+            position: relative;
+            min-height: 400px;
         }
 
         .lock-overlay {
@@ -23,81 +107,96 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.8); /* Darker overlay */
-            backdrop-filter: blur(10px); /* Stronger blur for "looking glass" */
+            z-index: 50;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
-            z-index: 100; /* Above content, below other fixed elements like top-bar if it were sticky */
-            transition: opacity 0.5s ease;
-            text-align: center;
-            padding: 20px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 40px rgba(0, 224, 255, 0.4); /* More prominent glow */
-            box-sizing: border-box; /* Include padding in width/height */
+            justify-content: center;
+            border-radius: 1.5rem;
         }
 
         .lock-overlay.hidden {
             opacity: 0;
-            pointer-events: none; /* Allow clicks to pass through when hidden */
+            pointer-events: none;
         }
 
-        .lock-overlay .lock-icon {
-            font-size: 4.5em; /* Larger icon */
-            color: var(--color-accent-primary);
-            margin-bottom: 25px; /* More space */
-            text-shadow: 0 0 15px rgba(0, 224, 255, 0.6); /* Icon glow */
-        }
-
-        .lock-overlay h2 {
-            font-size: 2.2em; /* Larger heading */
-            color: var(--color-text-light);
-            margin-bottom: 10px;
-        }
-
-        .lock-overlay p {
-            color: var(--color-text-muted);
-            font-size: 1.1em;
-            margin-bottom: 25px;
-            max-width: 400px;
-            line-height: 1.5;
-        }
-
-        .lock-overlay #unlockCodeInput {
-            background-color: var(--color-background-dark);
-            border: 1px solid var(--color-border-subtle);
-            padding: 15px 20px; /* Larger input field */
-            border-radius: 8px;
-            color: var(--color-text-light);
-            font-size: 1.2em; /* Larger font in input */
-            width: 90%;
-            max-width: 350px;
-            margin-bottom: 15px;
+        .input-premium {
+            background: rgba(15, 15, 15, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            padding: 1rem;
+            color: white;
             text-align: center;
-            outline: none; /* Remove default outline */
-            box-shadow: inset 0 0 8px rgba(0, 224, 255, 0.2); /* Inner glow */
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.2s;
         }
 
-        .lock-overlay #unlockCodeInput:focus {
-            border-color: var(--color-accent-primary);
-            box-shadow: inset 0 0 15px rgba(0, 224, 255, 0.4), 0 0 10px rgba(0, 224, 255, 0.3);
+        .input-premium:focus { border-color: var(--apple-blue); }
+
+        .btn-premium {
+            background: var(--apple-blue);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
         }
 
-        .lock-overlay .button {
-            padding: 12px 25px; /* Larger button */
-            font-size: 1.1em;
-            margin-top: 10px;
-            box-shadow: 0 4px 15px rgba(255, 179, 0, 0.4); /* Consistent button shadow */
+        .btn-premium:hover { filter: brightness(1.1); transform: scale(1.02); }
+
+        /* Patreon/Patron buttons - Red with glow (only for join/support buttons, not post links) */
+        .btn-premium[href*="patreon.com/Jimpeccable"],
+        .btn-premium[href*="patreon.com/Jimpeccable"],
+        a.btn-premium[href*="patreon.com/Jimpeccable"],
+        a.btn-premium[href*="Patreon.com/Jimpeccable"],
+        button.btn-premium#unlockButton {
+            background: var(--patreon-red) !important;
+            box-shadow: 0 4px 16px rgba(255, 66, 77, 0.4), 0 0 20px rgba(255, 66, 77, 0.2);
+        }
+
+        .btn-premium[href*="patreon.com/Jimpeccable"]:hover,
+        .btn-premium[href*="Patreon.com/Jimpeccable"]:hover,
+        a.btn-premium[href*="patreon.com/Jimpeccable"]:hover,
+        a.btn-premium[href*="Patreon.com/Jimpeccable"]:hover,
+        button.btn-premium#unlockButton:hover {
+            background: var(--patreon-red) !important;
+            box-shadow: 0 6px 24px rgba(255, 66, 77, 0.5), 0 0 30px rgba(255, 66, 77, 0.3);
+            filter: brightness(1.15);
+        }
+
+        .code-display {
+            font-family: 'SF Mono', 'Consolas', monospace;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--soft-gold);
+            letter-spacing: 0.2em;
+        }
+
+        .shake { animation: shake-anim 0.5s both; }
+        @keyframes shake-anim {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .badge-gold {
+            background: rgba(255, 214, 10, 0.1);
+            color: var(--soft-gold);
+            border: 1px solid rgba(255, 214, 10, 0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
         }
 
         .unlock-error {
             color: var(--color-red);
             margin-top: 10px;
-            font-size: 1em;
-            height: 1.5em; /* Reserve space to prevent layout shift */
+            font-size: 0.875rem;
+            height: 1.5em;
             opacity: 0;
             transition: opacity 0.3s ease;
         }
@@ -106,94 +205,33 @@
             opacity: 1;
         }
 
-        /* Shake animation for incorrect input */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
-            20%, 40%, 60%, 80% { transform: translateX(10px); }
-        }
-
-        .lock-overlay #unlockCodeInput.shake {
-            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-            border-color: var(--color-red);
-            box-shadow: inset 0 0 15px rgba(229, 57, 53, 0.4), 0 0 10px rgba(229, 57, 53, 0.3);
-        }
-
-        /* Responsive adjustments for the lock overlay */
-        @media (max-width: 768px) {
-            .lock-overlay .lock-icon {
-                font-size: 3.5em;
-                margin-bottom: 20px;
-            }
-            .lock-overlay h2 {
-                font-size: 1.8em;
-            }
-            .lock-overlay p {
-                font-size: 1em;
-                margin-bottom: 20px;
-            }
-            .lock-overlay #unlockCodeInput {
-                padding: 12px 15px;
-                font-size: 1.1em;
-            }
-            .lock-overlay .button {
-                padding: 10px 20px;
-                font-size: 1em;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .lock-overlay .lock-icon {
-                font-size: 3em;
-                margin-bottom: 15px;
-            }
-            .lock-overlay h2 {
-                font-size: 1.6em;
-            }
-            .lock-overlay p {
-                font-size: 0.9em;
-                margin-bottom: 15px;
-            }
-            .lock-overlay #unlockCodeInput {
-                padding: 10px 12px;
-                font-size: 1em;
-            }
-            .lock-overlay .button {
-                padding: 8px 15px;
-                font-size: 0.9em;
-            }
-        }
-
-        /* Styles for the new banner image */
         .member-perks-banner {
             width: 100%;
-            height: auto; /* Maintain aspect ratio */
+            height: auto;
             border-radius: 8px;
-            margin-bottom: 20px; /* Space below the banner */
+            margin-bottom: 20px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
         }
 
-        /* Unified media container for consistent sizing */
         .project-card-media {
             width: 100%;
-            height: 150px; /* Consistent height for all media */
-            overflow: hidden; /* Hide parts of image/video that go outside */
-            border-radius: 8px 8px 0 0; /* Match card top corners */
-            display: flex; /* For centering content if needed */
+            height: 150px;
+            overflow: hidden;
+            border-radius: 8px 8px 0 0;
+            display: flex;
             justify-content: center;
             align-items: center;
-            background-color: var(--color-background-dark); /* Fallback background */
+            background-color: #111;
         }
 
         .project-card-media img,
         .project-card-media iframe {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Make images/videos cover the area */
+            object-fit: cover;
             display: block;
         }
 
-        /* Ensure the tracking pixel doesn't interfere with layout */
         .project-card .tracking-pixel {
             position: absolute;
             visibility: hidden;
@@ -201,424 +239,533 @@
             width: 0;
         }
 
+        /* Share buttons */
+        .share-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .share-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #E5E5E5;
+            transition: all 200ms ease;
+            cursor: pointer;
+        }
+
+        .share-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .share-btn.twitter:hover { color: #1DA1F2; border-color: #1DA1F2; }
+        .share-btn.facebook:hover { color: #1877F2; border-color: #1877F2; }
+        .share-btn.reddit:hover { color: #FF4500; border-color: #FF4500; }
+        .share-btn.copy:hover { color: var(--apple-blue); border-color: var(--apple-blue); }
+
+        /* Search/Filter */
+        .search-container {
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            background: rgba(15, 15, 15, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            color: white;
+            font-size: 0.875rem;
+            outline: none;
+            transition: all 200ms ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--apple-blue);
+            box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.15);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Mobile CTA */
+        .mobile-cta {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--patreon-red);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px rgba(255, 66, 77, 0.4), 0 0 20px rgba(255, 66, 77, 0.3);
+            transition: all 300ms ease;
+            cursor: pointer;
+        }
+
+        .mobile-cta:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 32px rgba(255, 66, 77, 0.5), 0 0 30px rgba(255, 66, 77, 0.4);
+        }
+
+        @media (min-width: 768px) {
+            .mobile-cta {
+                display: none;
+            }
+        }
+
+        /* Testimonials */
+        .testimonial-card {
+            position: relative;
+            padding: 24px;
+        }
+
+        .testimonial-stars {
+            color: var(--soft-gold);
+            margin-bottom: 12px;
+            font-size: 0.875rem;
+        }
     </style>
 </head>
-<body>
-    <div id="vanta-background"></div>
+<body class="antialiased">
+    <div id="vanta-canvas"></div>
 
-    <div class="dashboard-wrapper">
-        <header class="top-bar">
-            <div class="header-content">
-                <h1>Jimpeccable's Patreon Dashboard</h1>
-                <p class="tagline">A glorious showcase of my D&D creations and tools, designed to enhance your campaigns.</p>
+    <!-- Header -->
+    <header class="header-glass sticky top-0 z-[1000] px-6 py-4">
+        <div class="max-w-[1920px] mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <i class="fa-solid fa-dice-d20 text-white text-2xl"></i>
+                <h1 class="text-xl font-bold text-white tracking-tight">JIMPECCABLE VAULT</h1>
             </div>
-            <nav class="quick-nav">
-                <a href="#premium-resources"><i class="fas fa-crown"></i> Member Exclusive</a>
-                <a href="#free-resources"><i class="fas fa-gift"></i> Free Content</a>
-                <a href="#member-perks"><i class="fas fa-star"></i> Member Perks</a>
+            <nav class="hidden md:flex items-center gap-8 text-sm text-gray-400 font-medium">
+                <a href="#premium-resources" class="hover:text-white transition-colors">Premium Content</a>
+                <a href="#free-resources" class="hover:text-white transition-colors">Free Resources</a>
+                <a href="#member-perks" class="hover:text-white transition-colors">Member Perks</a>
             </nav>
-        </header>
+            <a href="https://patreon.com/Jimpeccable" target="_blank" class="btn-premium py-2 text-sm">Join Patreon</a>
+        </div>
+    </header>
 
-        <div class="main-grid">
-            <aside class="sidebar">
-                <h3>Patreon Collections</h3>
-                <ul>
-                    <li><a href="https://www.patreon.com/collection/1600298?view=expanded" target="_blank"><i class="fas fa-tools"></i> D&D Tools</a></li>
-                    <li><a href="https://www.patreon.com/collection/1560641?view=expanded" target="_blank"><i class="fas fa-palette"></i> Tokens & Art</a></li>
-                    <li><a href="https://www.patreon.com/collection/1555473?view=expanded" target="_blank"><i class="fas fa-feather"></i> Owlbear Rodeo</a></li>
-                    <li><a href="https://www.patreon.com/collection/1555472?view=expanded" target="_blank"><i class="fas fa-dice-d20"></i> Foundry VTT</a></li>
-                    <li><a href="https://www.patreon.com/collection/1555484?view=expanded" target="_blank"><i class="fas fa-skull"></i> Curse of Strahd</a></li>
-                    <li><a href="https://www.patreon.com/collection/1555475?view=expanded" target="_blank"><i class="fas fa-mountain"></i> Icewind Dale</a></li>
-                </ul>
+    <main class="max-w-[1920px] mx-auto px-6 lg:px-20 py-16">
+        <!-- Hero -->
+        <section class="mb-24">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 text-xs font-bold uppercase tracking-widest mb-6">
+                <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span> Encrypted Repository
+            </div>
+            <h1 class="hero-title mb-6">Master your table with <span class="text-blue-500">Premium Automation.</span></h1>
+            <p class="text-gray-400 text-lg max-w-2xl leading-relaxed">A specialized collection of VTT macros, templates, and high-fidelity assets designed for the modern Game Master.</p>
+        </section>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-12">
+            <!-- Sidebar -->
+            <aside class="lg:col-span-1">
+                <div class="glass-card rounded-2xl p-6 sticky top-28">
+                    <h2 class="text-xs font-bold text-blue-500 uppercase tracking-widest mb-6">Adventures</h2>
+                    <ul class="space-y-4 mb-8">
+                        <li><a href="https://www.patreon.com/collection/1555475?view=expanded" target="_blank" class="flex items-center justify-between text-gray-400 hover:text-white transition-colors"><span class="flex items-center gap-3"><i class="fa-solid fa-mountain"></i> Icewind Dale</span><i class="fa-solid fa-chevron-right text-[10px]"></i></a></li>
+                        <li><a href="https://www.patreon.com/collection/1555484?view=expanded" target="_blank" class="flex items-center justify-between text-gray-400 hover:text-white transition-colors"><span class="flex items-center gap-3"><i class="fa-solid fa-skull"></i> Curse of Strahd</span><i class="fa-solid fa-chevron-right text-[10px]"></i></a></li>
+                    </ul>
+                    <p class="text-xs text-gray-500 italic mb-6">...more to come</p>
+                    
+                    <h2 class="text-xs font-bold text-blue-500 uppercase tracking-widest mb-6 mt-8">Patreon Collections</h2>
+                    <ul class="space-y-4">
+                        <li><a href="https://www.patreon.com/collection/1600298?view=expanded" target="_blank" class="flex items-center justify-between text-gray-400 hover:text-white transition-colors"><span class="flex items-center gap-3"><i class="fa-solid fa-tools"></i> D&D Tools</span><i class="fa-solid fa-chevron-right text-[10px]"></i></a></li>
+                        <li><a href="https://www.patreon.com/collection/1560641?view=expanded" target="_blank" class="flex items-center justify-between text-gray-400 hover:text-white transition-colors"><span class="flex items-center gap-3"><i class="fa-solid fa-palette"></i> Tokens & Art</span><i class="fa-solid fa-chevron-right text-[10px]"></i></a></li>
+                        <li><a href="https://www.patreon.com/collection/1842560?view=expanded" target="_blank" class="flex items-center justify-between text-gray-400 hover:text-white transition-colors"><span class="flex items-center gap-3"><i class="fa-solid fa-cube"></i> Miniatures</span><i class="fa-solid fa-chevron-right text-[10px]"></i></a></li>
+                        <li><a href="https://www.patreon.com/collection/1555473?view=expanded" target="_blank" class="flex items-center justify-between text-gray-400 hover:text-white transition-colors"><span class="flex items-center gap-3"><i class="fa-solid fa-feather"></i> Owlbear Rodeo</span><i class="fa-solid fa-chevron-right text-[10px]"></i></a></li>
+                        <li><a href="https://www.patreon.com/collection/1555472?view=expanded" target="_blank" class="flex items-center justify-between text-gray-400 hover:text-white transition-colors"><span class="flex items-center gap-3"><i class="fa-solid fa-dice-d20"></i> Foundry VTT</span><i class="fa-solid fa-chevron-right text-[10px]"></i></a></li>
+                    </ul>
+                    <div class="mt-10 pt-10 border-t border-white/10 flex justify-center gap-6">
+                        <a href="https://www.tiktok.com/@rollnat20" target="_blank" class="text-gray-500 hover:text-white text-xl"><i class="fa-brands fa-tiktok"></i></a>
+                        <a href="https://patreon.com/Jimpeccable" target="_blank" class="text-gray-500 hover:text-white text-xl"><i class="fa-brands fa-patreon"></i></a>
+                    </div>
+                </div>
             </aside>
 
-            <div class="content-area">
-                <div id="lockedContentContainer" class="locked-content-wrapper">
-                    <div id="lockOverlay" class="lock-overlay">
-                        <i class="fas fa-lock lock-icon"></i>
-                        <h2>Content Locked</h2>
-                        <p>Enter this month's secret code to unlock exclusive patron resources and special content.</p>
-                        <input type="password" id="unlockCodeInput" placeholder="Enter unlock code">
-                        <div id="unlockError" class="unlock-error"></div>
-                        <button class="button button-warning" id="unlockButton">
-                            <i class="fas fa-unlock"></i> Unlock
-                        </button>
+            <!-- Main Content -->
+            <div class="lg:col-span-3">
+                
+                <!-- Gated Premium Section (8 CARDS) -->
+                <section id="premium-resources" class="mb-24">
+                    <div class="flex items-center justify-between mb-10">
+                        <h2 class="text-3xl font-bold text-white flex items-center gap-3"><i class="fa-solid fa-shield-halved text-blue-500"></i> Patron Vault</h2>
+                        <span class="badge-gold">LEVEL 1 +</span>
                     </div>
 
-                    <section class="monthly-code-section card">
-                        <div class="section-title-container">
-                            <i class="fas fa-key"></i>
-                            <h2>This Month's Exclusive Code</h2>
+                    <div class="locked-content-wrapper" id="lockedContentContainer">
+                        <!-- VALUE PROPOSITION BANNER -->
+                        <div class="glass-card rounded-2xl p-6 mb-8 border-2 border-blue-500/30 bg-gradient-to-r from-blue-500/5 to-transparent">
+                            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                                <div class="flex-1">
+                                    <h3 class="text-xl font-bold text-white mb-3 flex items-center gap-2">
+                                        <i class="fa-solid fa-crown text-blue-500"></i>
+                                        What You Get as a Patron
+                                    </h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-300">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa-solid fa-check text-green-500"></i>
+                                            <span>Exclusive monthly codes</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa-solid fa-check text-green-500"></i>
+                                            <span>Early access to new content</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa-solid fa-check text-green-500"></i>
+                                            <span>Premium tools & resources</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <a href="https://patreon.com/Jimpeccable" target="_blank" class="btn-premium whitespace-nowrap">
+                                    Become a Patron
+                                </a>
+                            </div>
                         </div>
-                        <p class="code-explanation">
-                            As a valued patron, use this code to unlock premium features and content across my projects.
-                            This code refreshes automatically at the start of each month.
-                        </p>
-                        <div class="code-display" id="monthlyCodeDisplay">
-                            Loading Code...
-                        </div>
-                        <button class="button button-warning code-copy-button" onclick="copyCode()">
-                            <i class="far fa-copy"></i> Copy Code
-                        </button>
-                    </section>
 
-                    <hr class="section-divider">
+                        <!-- LOCK OVERLAY -->
+                        <div id="lockOverlay" class="lock-overlay glass-card-heavy">
+                            <div class="max-w-md w-full p-10 text-center">
+                                <div class="w-20 h-20 bg-white/10 border border-white/20 rounded-full flex items-center justify-center mx-auto mb-8 animate-pulse">
+                                    <i class="fa-solid fa-lock text-white text-3xl"></i>
+                                </div>
+                                <h3 class="text-3xl font-bold text-white mb-4">Vault Encrypted</h3>
+                                <p class="text-gray-400 mb-6">Unlock this month's resources using the secret code from Patreon.</p>
+                                
+                                <!-- Show what's inside -->
+                                <div class="bg-white/5 rounded-lg p-4 mb-6 text-left">
+                                    <p class="text-xs text-gray-400 mb-2 uppercase tracking-widest">Inside this vault:</p>
+                                    <ul class="text-sm text-gray-300 space-y-2">
+                                        <li class="flex items-center gap-2">
+                                            <i class="fa-solid fa-check text-green-500 text-xs"></i>
+                                            <span>8 Premium Resources</span>
+                                        </li>
+                                        <li class="flex items-center gap-2">
+                                            <i class="fa-solid fa-check text-green-500 text-xs"></i>
+                                            <span>Maps & Scenes Collections</span>
+                                        </li>
+                                        <li class="flex items-center gap-2">
+                                            <i class="fa-solid fa-check text-green-500 text-xs"></i>
+                                            <span>Monthly Exclusive Code</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <input type="password" id="unlockCodeInput" placeholder="ENTER ACCESS CODE" class="input-premium mb-4">
+                                <button id="unlockButton" class="btn-premium w-full mb-6">INITIALIZE DECRYPT</button>
+                                <p id="unlockError" class="unlock-error">Incorrect code. Please try again.</p>
+                                <a href="https://www.patreon.com/Jimpeccable" target="_blank" class="text-blue-500 text-sm underline underline-offset-4 mt-4 inline-block hover:text-blue-400 transition-colors">
+                                    <i class="fa-brands fa-patreon mr-2"></i>Get Code on Patreon
+                                </a>
+                            </div>
+                        </div>
 
-                    <section id="premium-resources" class="paid-resources-section card">
-                        <div class="section-title-container">
-                            <i class="fas fa-crown"></i>
-                            <h2>Premium Patron Resources</h2>
+                        <!-- MONTHLY CODE -->
+                        <div class="glass-card rounded-3xl p-10 mb-12 text-center relative overflow-hidden">
+                            <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">This Month's Exclusive Code</h3>
+                            <p class="text-gray-400 text-sm mb-6">As a valued patron, use this code to unlock premium features and content across my projects. This code refreshes automatically at the start of each month.</p>
+                            <div id="monthlyCodeDisplay" class="code-display mb-6">Loading Code...</div>
+                            <button onclick="copyCode()" class="px-6 py-2 bg-white/5 border border-white/10 rounded-full text-xs font-bold text-white hover:bg-white/10 transition-all">
+                                <i class="fa-solid fa-copy mr-2"></i> <span id="copyText">COPY CODE</span>
+                            </button>
                         </div>
-                        <p class="section-description">
-                            Unlock the full potential of your campaigns with these exclusive resources, available only to my amazing patrons.
-                        </p>
-                        <div class="project-grid">
-                            <div class="project-card">
-                                <div class="project-card-media">
-                                    <img src="https://i.imgur.com/tia633U.png" alt="Wilderness Encounter Tokens & Art">
-                                </div>
-                                <div class="project-card-content">
-                                    <h3>Wilderness Encounter Tokens & Art</h3>
-                                    <p>Enhanced encounter assets to bring your wilderness encounters to life.</p>
-                                    <a href="https://www.patreon.com/posts/new-wilderness-131695695" class="button button-warning" target="_blank">
-                                        <i class="fas fa-arrow-right"></i> View Project
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="project-card">
-                                <div class="project-card-media">
-                                    <img src="https://thumbs2.imgbox.com/07/8b/kWy01Bt9_t.png" alt="Icewind Dale One-shot - The Fear, Silence & Snow">
-                                </div>
-                                <div class="project-card-content">
-                                    <h3>Icewind Dale One-shot: The Fear, Silence & Snow</h3>
-                                    <p>A complete one-shot adventure, with VTT maps for Roll20 & FoundryVTT coming soon!</p>
-                                    <a href="https://www.patreon.com/posts/fear-silence-one-132347412" class="button button-warning" target="_blank">
-                                        <i class="fas fa-arrow-right"></i> View Project
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="project-card">
-                                <div class="project-card-media">
-                                    <div class="project-card-media">
-                                    <img src="https://thumbs2.imgbox.com/86/ad/lV3VdZiR_t.png" alt="D&D Command Centre">
-                                </div>
-                                </div>
-                                <div class="project-card-content">
-                                    <h3>D&D Command Centre</h3>
-                                    <p>Powerful D&D tools for automating your prep both in-person and online.</p>
-                                    <a href="https://www.patreon.com/posts/exclusive-access-133747915" class="button button-warning" target="_blank">
-                                        <i class="fas fa-arrow-right"></i> View Project
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="project-card">
-                                <div class="project-card-media">
-                                    <img src="https://thumbs2.imgbox.com/6b/23/oWVRVq8M_t.png" alt="D&D Initiative Tracker with API">
-                                </div>
-                                <div class="project-card-content">
-                                    <h3>D&D Initiative Tracker with API</h3>
-                                    <p>Effortless combatant management, intuitive initiative tracking, HP & conditions, and a built-in dice roller.</p>
-                                    <a href="https://dndtracker.nat20.live/" class="button button-warning" target="_blank">
-                                        <i class="fas fa-arrow-right"></i> Launch App
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="project-card">
-                                <div class="project-card-media">
-                                    <img src="https://thumbs2.imgbox.com/41/11/uDBpdeqa_t.png" alt="Owlbear Rodeo NPC Realm Generator (Extension)">
-                                </div>
-                                <div class="project-card-content">
-                                    <h3>Owlbear Rodeo NPC Realm Generator (Extension)</h3>
-                                    <p>Generate NPCs on the fly for your Owlbear Rodeo sessions.</p>
-                                    <button class="button button-warning" onclick="copyManifestUrl('https://raw.githubusercontent.com/Jimpeccable/NPC-Generator-OBR/refs/heads/NPC-Generator-OBR-1.0.2/manifest.json', this)">
-                                        <i class="fas fa-download"></i> Copy Manifest URL
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="project-card">
-                                <div class="project-card-media">
-                                    <img src="https://thumbs2.imgbox.com/75/23/YpFlfgV4_t.png" alt="Icewind Dale Premium Macros">
-                                </div>
-                                <div class="project-card-content">
-                                    <h3>Icewind Dale Premium Macros</h3>
-                                    <p>More comprehensive macros for blizzards, tracking and navigation as well as emergency situations.</p>
-                                    <button class="button button-warning" onclick="copyManifestUrl('https://gist.githubusercontent.com/Jimpeccable/4de8576b88e7c69278fc610083095e29/raw/23dc6391b65e366a6eaf7a5a214341d9888aa03e/icewind-dale-gm-macros-patreon.json', this)">
-                                        <i class="fas fa-download"></i> Copy Manifest URL
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="project-card">
-                                <div class="project-card-media">
-                                    <img src="https://thumbs2.imgbox.com/4b/f9/yw27Ezbq_t.png" alt="Time Keeper">
-                                </div>
-                                <div class="project-card-content">
-                                    <h3>Time Keeper</h3>
-                                    <p>Effortlessly track the passage of time in-game with dynamic visuals, weather effects, and event management.</p>
-                                    <a href="http://timekeeper.nat20.live/" class="button button-warning" target="_blank">
-                                        <i class="fas fa-arrow-right"></i> Launch App
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="project-card">
-    <div class="project-card-media">
-        <img src="https://thumbs2.imgbox.com/6b/42/8CSCSQRw_t.png" alt="DM Toolkit">
-    </div>
-    <div class="project-card-content">
-        <h3>DM Toolkit</h3>
-        <p>The DM Toolkit can handle encounters for the party, NPCs, weather forecasts, shops, and much more.</p>
-        <a href="https://dm-toolkit.nat20.live/" class="button button-warning" target="_blank">
-            <i class="fas fa-arrow-right"></i> Launch App
-        </a>
-    </div>
-</div>
-                        </div>
-                    </section>
-                </div> <hr class="section-divider">
 
-                <section id="free-resources" class="free-resources-section card">
-                    <div class="section-title-container">
-                        <i class="fas fa-gift"></i>
-                        <h2>Free Community Resources</h2>
-                    </div>
-                    <p class="section-description">
-                        Enjoy these free tools and assets, crafted to elevate your D&D sessions.
-                    </p>
-                    <div class="project-grid">
-                        <div class="project-card">
-                            <div class="project-card-media">
-                                <img src="https://thumbs2.imgbox.com/80/8a/qHgODKBt_t.png" alt="Icewind Dale Posters">
-                            </div>
-                            <div class="project-card-content">
-                                <h3>Icewind Dale Posters</h3>
-                                <p>Atmospheric posters to enhance your campaign. Print them out or use them digitally!</p>
-                                <a href="https://www.patreon.com/posts/new-drop-posters-131587088" class="button button-warning" target="_blank">
-                                    <i class="fas fa-arrow-right"></i> View Project
-                                </a>
-                            </div>
-                        </div>
-                        <div class="project-card">
-                            <div class="project-card-media">
-                                <img src="https://thumbs2.imgbox.com/f2/0e/Yv1yLfZh_t.png" alt="Bryn Shander Newspaper">
-                            </div>
-                            <div class="project-card-content">
-                                <h3>Bryn Shander Newspaper</h3>
-                                <p>Add some local flavor to your sessions with this immersive newspaper handout.</p>
-                                <a href="https://www.patreon.com/posts/enhance-your-131539068" class="button button-warning" target="_blank">
-                                    <i class="fas fa-arrow-right"></i> View Project
-                                </a>
-                            </div>
-                        </div>
-                        <div class="project-card">
-                            <div class="project-card-media">
-                                <img src="https://thumbs2.imgbox.com/d6/61/JVK89aZw_t.png" alt="Bryn Shander Speakers Podium (3D Printable)">
-                            </div>
-                            <div class="project-card-content">
-                                <h3>Bryn Shander Speakers Podium (3D Printable)</h3>
-                                <p>A free 3D printable .OBJ file to bring your tabletop to life.</p>
-                                <a href="https://www.patreon.com/posts/free-3d-asset-133582409" class="button button-warning" target="_blank">
-                                    <i class="fas fa-download"></i> Download Asset
-                                </a>
-                            </div>
-                        </div>
-                        <div class="project-card">
-                            <div class="project-card-media">
-                                <img src="https://thumbs2.imgbox.com/c8/61/jQGyvuYc_t.png" alt="Black Cabin Art / Isometric">
-                            </div>
-                            <div class="project-card-content">
-                                <h3>Black Cabin Art / Isometric</h3>
-                                <p>Stunning art pieces to set the scene for your Black Cabin encounters.</p>
-                                <a href="https://drive.google.com/file/d/1TSOXa9zK3p3pKIpkGZMKkEbkaiG74IKN/view?usp=drive_link" class="button button-warning" target="_blank">
-                                    <i class="fas fa-arrow-right"></i> View Art 1
-                                </a>
-                                <a href="https://drive.google.com/file/d/1sD7b33rvN8lr5vKQKVAx0uJOtiPbP6gr/view?usp=drive_link" class="button button-warning" target="_blank" style="margin-top: 5px;">
-                                    <i class="fas fa-arrow-right"></i> View Art 2
-                                </a>
-                            </div>
-                        </div>
-                        <div class="project-card">
-                            <div class="project-card-media">
-                                <img src="https://thumbs2.imgbox.com/9e/01/XMi3D1g6_t.png" alt="Black Cabin Player Handout">
-                            </div>
-                            <div class="project-card-content">
-                                <h3>Black Cabin Player Handout</h3>
-                                <p>A chilling handout for players who meet an untimely demise in the Black Cabin.</p>
-                                <a href="https://drive.google.com/file/d/1TSOXa9zK3p3pKIpkGZMKkEbkaiG74IKN/view?usp=drive_link" class="button button-warning" target="_blank">
-                                    <i class="fas fa-arrow-right"></i> View Handout
-                                </a>
-                            </div>
-                        </div>
-                        <div class="project-card">
-                            <div class="project-card-media">
-                                <img src="https://images2.imgbox.com/75/23/YpFlfgV4_o.png" alt="Foundry VTT GM Macros">
-                            </div>
-                            <div class="project-card-content">
-                                <h3>Foundry VTT GM Macros</h3>
-                                <p>Macros for light control, dice rolls, token teleporting, and streamlining travel for your Foundry VTT campaigns.</p>
-                                <button class="button button-warning" onclick="copyManifestUrl('http://tiny.cc/o8ym001', this)">
-                                    <i class="fas fa-download"></i> Copy Manifest URL
-                                </button>
-                            </div>
-                        </div>
-                        <div class="project-card">
-                            <div class="project-card-media">
-                                <img src="https://thumbs2.imgbox.com/5d/35/DUMiUWIg_t.png" alt="Curse of Strahd DM Cheat Sheet (Web)">
-                            </div>
-                            <div class="project-card-content">
-                                <h3>Curse of Strahd DM Cheat Sheet (Web)</h3>
-                                <p>Quick reference for running CoS with nightmare mechanics, despair, and gaslighting techniques.</p>
-                                <a href="http://cos-cheatsheet.nat20.live/" class="button button-warning" target="_blank">
-                                    <i class="fas fa-arrow-right"></i> Launch Cheat Sheet
-                                </a>
-                            </div>
-                        </div>
-                        <div class="project-card">
-                            <div class="project-card-media">
-                                <img src="https://thumbs2.imgbox.com/89/77/3zldASVo_t.png" alt="Art Dumping Ground">
-                            </div>
-                            <div class="project-card-content">
-                                <h3>Art & AI Content Dumping Ground</h3>
-                                <p>A collection of art and AI-generated content used in my campaigns, free for your use!</p>
-                                <a href="https://drive.google.com/drive/folders/10MmCN3tf_rx6kELNKjxJXnlPXQndq37d?usp=sharing" class="button button-warning" target="_blank">
-                                    <i class="fas fa-folder-open"></i> Access Drive
-                                </a>
-                            </div>
-                        </div>
-                        <div class="project-card">
-                                <div class="project-card-media">
-                                    <img src="https://images2.imgbox.com/4b/f9/yw27Ezbq_o.png" alt="Time Keeper">
+                        <!-- MAPS & SCENES HIGHLIGHT SECTIONS -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                            <!-- Maps Section -->
+                            <a href="https://www.patreon.com/collection/1797802?view=expanded" target="_blank" class="group glass-card rounded-2xl p-8 border-2 border-blue-500/50 hover:border-blue-500 transition-all hover:scale-105 relative overflow-hidden">
+                                <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <div class="relative z-10">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <i class="fa-solid fa-map text-blue-500 text-4xl"></i>
+                                        <i class="fa-solid fa-arrow-right text-blue-500 text-xl group-hover:translate-x-2 transition-transform"></i>
+                                    </div>
+                                    <h3 class="text-2xl font-bold text-white mb-2">Maps Collection</h3>
+                                    <p class="text-gray-400 text-sm">Explore our extensive library of battle maps and location maps for your campaigns.</p>
+                                    <div class="mt-4 inline-flex items-center gap-2 text-blue-500 text-sm font-semibold">
+                                        <span>View Collection</span>
+                                        <i class="fa-solid fa-chevron-right"></i>
+                                    </div>
                                 </div>
-                                <div class="project-card-content">
-                                    <h3>Time Keeper</h3>
-                                    <p>Effortlessly track the passage of time in-game with dynamic visuals, weather effects, and event management.</p>
-                                    <a href="http://timekeeper.nat20.live/" class="button button-warning" target="_blank">
-                                        <i class="fas fa-arrow-right"></i> Launch App
-                                    </a>
+                            </a>
+                            
+                            <!-- Scenes Section -->
+                            <a href="https://www.patreon.com/collection/1897119?view=expanded" target="_blank" class="group glass-card rounded-2xl p-8 border-2 border-purple-500/50 hover:border-purple-500 transition-all hover:scale-105 relative overflow-hidden">
+                                <div class="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <div class="relative z-10">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <i class="fa-solid fa-theater-masks text-purple-500 text-4xl"></i>
+                                        <i class="fa-solid fa-arrow-right text-purple-500 text-xl group-hover:translate-x-2 transition-transform"></i>
+                                    </div>
+                                    <h3 class="text-2xl font-bold text-white mb-2">Scenes Collection</h3>
+                                    <p class="text-gray-400 text-sm">Immersive scene assets and atmospheric pieces to set the perfect mood.</p>
+                                    <div class="mt-4 inline-flex items-center gap-2 text-purple-500 text-sm font-semibold">
+                                        <span>View Collection</span>
+                                        <i class="fa-solid fa-chevron-right"></i>
+                                    </div>
                                 </div>
+                            </a>
                         </div>
-                        <div class="project-card">
-    <div class="project-card-media">
-        <img src="https://thumbs2.imgbox.com/58/51/bUEZ8yUj_t.png" alt="Tarokka Reading">
-    </div>
-    <div class="project-card-content">
-        <h3>Tarokka Reading</h3>
-        <p>Experience mystical Tarokka card readings with interactive features, DM controls, and atmospheric visuals.</p>
-        <a href="http://tarokka.nat20.live/" class="button button-warning" target="_blank">
-            <i class="fas fa-arrow-right"></i> Launch App
-        </a>
-    </div>
-</div>
-<div class="project-card">
-    <div class="project-card-media">
-        <img src="https://images2.imgbox.com/6b/42/8CSCSQRw_o.png" alt="DM Toolkit">
-    </div>
-    <div class="project-card-content">
-        <h3>DM Toolkit</h3>
-        <p>The DM Toolkit can handle encounters for the party, NPCs, weather forecasts, shops, and much more.</p>
-        <a href="https://dm-toolkit.nat20.live/" class="button button-warning" target="_blank">
-            <i class="fas fa-arrow-right"></i> Launch App
-        </a>
-    </div>
-</div>
 
+                        <!-- SEARCH/FILTER -->
+                        <div class="mb-8">
+                            <div class="glass-card rounded-xl p-4 search-container">
+                                <i class="fa-solid fa-search search-icon"></i>
+                                <input type="text" id="resourceSearch" placeholder="Search resources..." class="search-input">
+                            </div>
+                        </div>
+
+                        <!-- PREMIUM ASSET GRID (8 CARDS) -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="premiumAssetGrid">
+                            <!-- Card 1 -->
+                            <div class="project-card glass-card rounded-2xl overflow-hidden" data-resource-title="Wilderness Encounter Tokens & Art" data-resource-url="https://www.patreon.com/posts/new-wilderness-131695695">
+                                <div class="card-image-wrapper"><img src="https://images2.imgbox.com/42/1f/FyeReyst_o.png" alt="Wilderness Encounter Tokens & Art" class="card-image"></div>
+                                <div class="p-6">
+                                    <h3 class="text-xl font-bold text-white mb-2">Wilderness Encounter Tokens & Art</h3>
+                                    <p class="text-sm text-gray-400 mb-6">Enhanced encounter assets to bring your wilderness encounters to life.</p>
+                                    <a href="https://www.patreon.com/posts/new-wilderness-131695695" target="_blank" class="btn-premium block text-center py-2 text-sm mb-3">View Project</a>
+                                    <div class="share-buttons">
+                                        <button class="share-btn twitter" onclick="shareResource('twitter', this)" title="Share on Twitter">
+                                            <i class="fa-brands fa-twitter"></i>
+                                        </button>
+                                        <button class="share-btn facebook" onclick="shareResource('facebook', this)" title="Share on Facebook">
+                                            <i class="fa-brands fa-facebook"></i>
+                                        </button>
+                                        <button class="share-btn reddit" onclick="shareResource('reddit', this)" title="Share on Reddit">
+                                            <i class="fa-brands fa-reddit"></i>
+                                        </button>
+                                        <button class="share-btn copy" onclick="shareResource('copy', this)" title="Copy link">
+                                            <i class="fa-solid fa-link"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Card 2 -->
+                            <div class="project-card glass-card rounded-2xl overflow-hidden">
+                                <div class="card-image-wrapper"><img src="https://thumbs2.imgbox.com/07/8b/kWy01Bt9_t.png" alt="Icewind Dale One-shot - The Fear, Silence & Snow" class="card-image"></div>
+                                <div class="p-6">
+                                    <h3 class="text-xl font-bold text-white mb-2">Icewind Dale One-shot: The Fear, Silence & Snow</h3>
+                                    <p class="text-sm text-gray-400 mb-6">A complete one-shot adventure, with VTT maps for Roll20 & FoundryVTT coming soon!</p>
+                                    <a href="https://www.patreon.com/posts/fear-silence-one-132347412" target="_blank" class="btn-premium block text-center py-2 text-sm">View Project</a>
+                                </div>
+                            </div>
+                            <!-- Card 3 -->
+                            <div class="project-card glass-card rounded-2xl overflow-hidden">
+                                <div class="card-image-wrapper"><img src="https://thumbs2.imgbox.com/86/ad/lV3VdZiR_t.png" alt="D&D Command Centre" class="card-image"></div>
+                                <div class="p-6">
+                                    <h3 class="text-xl font-bold text-white mb-2">D&D Command Centre</h3>
+                                    <p class="text-sm text-gray-400 mb-6">Powerful D&D tools for automating your prep both in-person and online.</p>
+                                    <a href="https://www.patreon.com/posts/exclusive-access-133747915" target="_blank" class="btn-premium block text-center py-2 text-sm">View Project</a>
+                                </div>
+                            </div>
+                            <!-- Card 4 -->
+                            <div class="project-card glass-card rounded-2xl overflow-hidden">
+                                <div class="card-image-wrapper"><img src="https://thumbs2.imgbox.com/6b/23/oWVRVq8M_t.png" alt="D&D Initiative Tracker with API" class="card-image"></div>
+                                <div class="p-6">
+                                    <h3 class="text-xl font-bold text-white mb-2">D&D Initiative Tracker with API</h3>
+                                    <p class="text-sm text-gray-400 mb-6">Effortless combatant management, intuitive initiative tracking, HP & conditions, and a built-in dice roller.</p>
+                                    <a href="https://dndtracker.nat20.live/" target="_blank" class="btn-premium block text-center py-2 text-sm">Launch App</a>
+                                </div>
+                            </div>
+                            <!-- Card 5 -->
+                            <div class="project-card glass-card rounded-2xl overflow-hidden">
+                                <div class="card-image-wrapper"><img src="https://thumbs2.imgbox.com/41/11/uDBpdeqa_t.png" alt="Owlbear Rodeo NPC Realm Generator (Extension)" class="card-image"></div>
+                                <div class="p-6">
+                                    <h3 class="text-xl font-bold text-white mb-2">Owlbear Rodeo NPC Realm Generator (Extension)</h3>
+                                    <p class="text-sm text-gray-400 mb-6">Generate NPCs on the fly for your Owlbear Rodeo sessions.</p>
+                                    <button onclick="copyManifestUrl('https://raw.githubusercontent.com/Jimpeccable/NPC-Generator-OBR/refs/heads/NPC-Generator-OBR-1.0.2/manifest.json', this)" class="btn-premium w-full text-sm">Copy Manifest URL</button>
+                                </div>
+                            </div>
+                            <!-- Card 6 -->
+                            <div class="project-card glass-card rounded-2xl overflow-hidden">
+                                <div class="card-image-wrapper"><img src="https://thumbs2.imgbox.com/75/23/YpFlfgV4_t.png" alt="Icewind Dale Premium Macros" class="card-image"></div>
+                                <div class="p-6">
+                                    <h3 class="text-xl font-bold text-white mb-2">Icewind Dale Premium Macros</h3>
+                                    <p class="text-sm text-gray-400 mb-6">More comprehensive macros for blizzards, tracking and navigation as well as emergency situations.</p>
+                                    <button onclick="copyManifestUrl('https://gist.githubusercontent.com/Jimpeccable/4de8576b88e7c69278fc610083095e29/raw/23dc6391b65e366a6eaf7a5a214341d9888aa03e/icewind-dale-gm-macros-patreon.json', this)" class="btn-premium w-full text-sm">Copy Manifest URL</button>
+                                </div>
+                            </div>
+                            <!-- Card 7 -->
+                            <div class="project-card glass-card rounded-2xl overflow-hidden">
+                                <div class="card-image-wrapper"><img src="https://thumbs2.imgbox.com/4b/f9/yw27Ezbq_t.png" alt="Time Keeper" class="card-image"></div>
+                                <div class="p-6">
+                                    <h3 class="text-xl font-bold text-white mb-2">Time Keeper</h3>
+                                    <p class="text-sm text-gray-400 mb-6">Effortlessly track the passage of time in-game with dynamic visuals, weather effects, and event management.</p>
+                                    <a href="http://timekeeper.nat20.live/" target="_blank" class="btn-premium block text-center py-2 text-sm">Launch App</a>
+                                </div>
+                            </div>
+                            <!-- Card 8 -->
+                            <div class="project-card glass-card rounded-2xl overflow-hidden">
+                                <div class="card-image-wrapper"><img src="https://thumbs2.imgbox.com/6b/42/8CSCSQRw_t.png" alt="DM Toolkit" class="card-image"></div>
+                                <div class="p-6">
+                                    <h3 class="text-xl font-bold text-white mb-2">DM Toolkit</h3>
+                                    <p class="text-sm text-gray-400 mb-6">The DM Toolkit can handle encounters for the party, NPCs, weather forecasts, shops, and much more.</p>
+                                    <a href="https://dm-toolkit.nat20.live/" target="_blank" class="btn-premium block text-center py-2 text-sm">Launch App</a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
-                <hr class="section-divider">
-
-                <section id="member-perks" class="member-perks-section card">
-                    <div class="section-title-container">
-                        <i class="fas fa-star"></i>
-                        <h2>Exclusive Member Perks</h2>
+                <!-- Free Community Section (11 CARDS) -->
+                <section id="free-resources" class="mb-24">
+                    <h2 class="text-3xl font-bold text-white mb-10 flex items-center gap-3"><i class="fa-solid fa-gift text-green-500"></i> Free Resources</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                        <div class="project-card glass-card rounded-2xl overflow-hidden">
+                            <div class="card-image-wrapper"><img src="https://thumbs2.imgbox.com/80/8a/qHgODKBt_t.png" alt="Icewind Dale Posters" class="card-image"></div>
+                            <div class="p-6"><h3 class="font-bold text-white mb-2">Icewind Dale Posters</h3><p class="text-xs text-gray-400 mb-4">Atmospheric posters to enhance your campaign. Print them out or use them digitally!</p><a href="https://www.patreon.com/posts/new-drop-posters-131587088" target="_blank" class="text-blue-500 text-xs font-bold">View Project</a></div>
+                        </div>
+                        <div class="project-card glass-card rounded-2xl overflow-hidden">
+                            <div class="card-image-wrapper"><img src="https://thumbs2.imgbox.com/f2/0e/Yv1yLfZh_t.png" alt="Bryn Shander Newspaper" class="card-image"></div>
+                            <div class="p-6"><h3 class="font-bold text-white mb-2">Bryn Shander Newspaper</h3><p class="text-xs text-gray-400 mb-4">Add some local flavor to your sessions with this immersive newspaper handout.</p><a href="https://www.patreon.com/posts/enhance-your-131539068" target="_blank" class="text-blue-500 text-xs font-bold">View Project</a></div>
+                        </div>
+                        <div class="project-card glass-card rounded-2xl overflow-hidden">
+                            <div class="card-image-wrapper"><img src="https://thumbs2.imgbox.com/d6/61/JVK89aZw_t.png" alt="Bryn Shander Speakers Podium (3D Printable)" class="card-image"></div>
+                            <div class="p-6"><h3 class="font-bold text-white mb-2">Bryn Shander Speakers Podium (3D Printable)</h3><p class="text-xs text-gray-400 mb-4">A free 3D printable .OBJ file to bring your tabletop to life.</p><a href="https://www.patreon.com/posts/free-3d-asset-133582409" target="_blank" class="text-blue-500 text-xs font-bold">Download Asset</a></div>
+                        </div>
+                        <div class="project-card glass-card rounded-2xl overflow-hidden">
+                            <div class="card-image-wrapper"><img src="https://thumbs2.imgbox.com/c8/61/jQGyvuYc_t.png" alt="Black Cabin Art / Isometric" class="card-image"></div>
+                            <div class="p-6"><h3 class="font-bold text-white mb-2">Black Cabin Art / Isometric</h3><p class="text-xs text-gray-400 mb-4">Stunning art pieces to set the scene for your Black Cabin encounters.</p><div class="flex flex-col gap-2"><a href="https://drive.google.com/file/d/1TSOXa9zK3p3pKIpkGZMKkEbkaiG74IKN/view?usp=drive_link" target="_blank" class="text-blue-500 text-xs font-bold">View Art 1</a><a href="https://drive.google.com/file/d/1sD7b33rvN8lr5vKQKVAx0uJOtiPbP6gr/view?usp=drive_link" target="_blank" class="text-blue-500 text-xs font-bold">View Art 2</a></div></div>
+                        </div>
+                        <div class="project-card glass-card rounded-2xl overflow-hidden">
+                            <div class="card-image-wrapper"><img src="https://thumbs2.imgbox.com/9e/01/XMi3D1g6_t.png" alt="Black Cabin Player Handout" class="card-image"></div>
+                            <div class="p-6"><h3 class="font-bold text-white mb-2">Black Cabin Player Handout</h3><p class="text-xs text-gray-400 mb-4">A chilling handout for players who meet an untimely demise in the Black Cabin.</p><a href="https://drive.google.com/file/d/1TSOXa9zK3p3pKIpkGZMKkEbkaiG74IKN/view?usp=drive_link" target="_blank" class="text-blue-500 text-xs font-bold">View Handout</a></div>
+                        </div>
+                        <div class="project-card glass-card rounded-2xl overflow-hidden">
+                            <div class="card-image-wrapper"><img src="https://images2.imgbox.com/75/23/YpFlfgV4_o.png" alt="Foundry VTT GM Macros" class="card-image"></div>
+                            <div class="p-6"><h3 class="font-bold text-white mb-2">Foundry VTT GM Macros</h3><p class="text-xs text-gray-400 mb-4">Macros for light control, dice rolls, token teleporting, and streamlining travel for your Foundry VTT campaigns.</p><button onclick="copyManifestUrl('http://tiny.cc/o8ym001', this)" class="text-blue-500 text-xs font-bold">Copy Manifest URL</button></div>
+                        </div>
+                        <div class="project-card glass-card rounded-2xl overflow-hidden">
+                            <div class="card-image-wrapper"><img src="https://thumbs2.imgbox.com/5d/35/DUMiUWIg_t.png" alt="Curse of Strahd DM Cheat Sheet (Web)" class="card-image"></div>
+                            <div class="p-6"><h3 class="font-bold text-white mb-2">Curse of Strahd DM Cheat Sheet (Web)</h3><p class="text-xs text-gray-400 mb-4">Quick reference for running CoS with nightmare mechanics, despair, and gaslighting techniques.</p><a href="http://cos-cheatsheet.nat20.live/" target="_blank" class="text-blue-500 text-xs font-bold">Launch Cheat Sheet</a></div>
+                        </div>
+                        <div class="project-card glass-card rounded-2xl overflow-hidden">
+                            <div class="card-image-wrapper"><img src="https://thumbs2.imgbox.com/89/77/3zldASVo_t.png" alt="Art Dumping Ground" class="card-image"></div>
+                            <div class="p-6"><h3 class="font-bold text-white mb-2">Art & AI Content Dumping Ground</h3><p class="text-xs text-gray-400 mb-4">A collection of art and AI-generated content used in my campaigns, free for your use!</p><a href="https://drive.google.com/drive/folders/10MmCN3tf_rx6kELNKjxJXnlPXQndq37d?usp=sharing" target="_blank" class="text-blue-500 text-xs font-bold">Access Drive</a></div>
+                        </div>
+                        <div class="project-card glass-card rounded-2xl overflow-hidden">
+                            <div class="card-image-wrapper"><img src="https://images2.imgbox.com/4b/f9/yw27Ezbq_o.png" alt="Time Keeper" class="card-image"></div>
+                            <div class="p-6"><h3 class="font-bold text-white mb-2">Time Keeper</h3><p class="text-xs text-gray-400 mb-4">Effortlessly track the passage of time in-game with dynamic visuals, weather effects, and event management.</p><a href="http://timekeeper.nat20.live/" target="_blank" class="text-blue-500 text-xs font-bold">Launch App</a></div>
+                        </div>
+                        <div class="project-card glass-card rounded-2xl overflow-hidden">
+                            <div class="card-image-wrapper"><img src="https://thumbs2.imgbox.com/58/51/bUEZ8yUj_t.png" alt="Tarokka Reading" class="card-image"></div>
+                            <div class="p-6"><h3 class="font-bold text-white mb-2">Tarokka Reading</h3><p class="text-xs text-gray-400 mb-4">Experience mystical Tarokka card readings with interactive features, DM controls, and atmospheric visuals.</p><a href="http://tarokka.nat20.live/" target="_blank" class="text-blue-500 text-xs font-bold">Launch App</a></div>
+                        </div>
+                        <div class="project-card glass-card rounded-2xl overflow-hidden">
+                            <div class="card-image-wrapper"><img src="https://images2.imgbox.com/6b/42/8CSCSQRw_o.png" alt="DM Toolkit" class="card-image"></div>
+                            <div class="p-6"><h3 class="font-bold text-white mb-2">DM Toolkit</h3><p class="text-xs text-gray-400 mb-4">The DM Toolkit can handle encounters for the party, NPCs, weather forecasts, shops, and much more.</p><a href="https://dm-toolkit.nat20.live/" target="_blank" class="text-blue-500 text-xs font-bold">Launch App</a></div>
+                        </div>
                     </div>
-                    <p class="section-description">
-                        Discover incredible discounts and special offers from my favorite partners, exclusively for Jimpeccable's patrons!
-                    </p>
+                </section>
+
+                <!-- Perks (2 CARDS) -->
+                <section id="member-perks" class="mb-24">
+                    <h2 class="text-3xl font-bold text-white mb-10 flex items-center gap-3"><i class="fa-solid fa-star text-yellow-500"></i> Member Perks</h2>
                     <img src="https://thumbs2.imgbox.com/74/49/1gpqFNkP_t.png" alt="Member Perks Banner" class="member-perks-banner">
-
-                    <div class="project-grid">
-                        <div class="project-card">
-                            <div class="project-card-media">
-                                <img src="https://www.monumentstudios.net/images/stream-tile-image.png" alt="Monument Studios Fantasy+">
-                            </div>
-                            <div class="project-card-content">
-                                <h3>Monument Studios: Fantasy+</h3>
-                                <p>Unlock powerful TTRPG audio to immerse your players in epic adventures. 3 Free Months courtesy of Monument Studios</p>
-                                <div class="code-display" style="font-size: 1.2em; letter-spacing: 1px; margin-top: 10px;">
-                                    Code: ROLLNAT20
-                                </div>
-                                <a href="https://www.monumentstudios.net/pages/fantasy+" class="button button-warning" target="_blank" style="margin-top: 15px;">
-                                    <i class="fas fa-external-link-alt"></i> Visit Site
-                                </a>
-                            </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+                        <div class="glass-card rounded-2xl p-8 border-yellow-500/30">
+                            <img src="https://www.monumentstudios.net/images/stream-tile-image.png" class="w-full h-32 object-contain mb-6">
+                            <h3 class="text-xl font-bold text-white mb-4">Monument Studios: Fantasy+</h3>
+                            <p class="text-sm text-gray-400 mb-4">Unlock powerful TTRPG audio to immerse your players in epic adventures. 3 Free Months courtesy of Monument Studios</p>
+                            <div class="code-display text-base mb-4" style="font-size: 1.2em; letter-spacing: 1px;">Code: ROLLNAT20</div>
+                            <a href="https://www.monumentstudios.net/pages/fantasy+" target="_blank" class="text-yellow-500 font-bold uppercase tracking-widest text-xs">Visit Site</a>
                         </div>
-                        <div class="project-card">
-                            <div class="project-card-media">
-                                <a rel="sponsored" href="https://worldanvil.pxf.io/c/6381096/1601963/10846" target="_top">
-                                    <img src="https://i0.wp.com/blog.worldanvil.com/wp-content/uploads/2018/06/header.png?resize=1024%2C512" border="0" alt="World Anvil"/>
-                                </a>
-                            </div>
+                        <div class="glass-card rounded-2xl p-8 border-blue-500/30">
+                            <a rel="sponsored" href="https://worldanvil.pxf.io/c/6381096/1601963/10846" target="_top">
+                                <img src="https://i0.wp.com/blog.worldanvil.com/wp-content/uploads/2018/06/header.png?resize=1024%2C512" border="0" alt="World Anvil" class="w-full h-32 object-contain mb-6"/>
+                            </a>
                             <img height="0" width="0" src="https://imp.pxf.io/i/6381096/1601963/10846" style="position:absolute;visibility:hidden;" border="0" class="tracking-pixel" />
-                            <div class="project-card-content">
-                                <h3>World Anvil</h3>
-                                <p>Build your worlds, manage your campaigns, and bring your stories to life with powerful tools.</p>
-                                <a href="https://worldanvil.pxf.io/c/6381096/1601963/10846" class="button button-warning" target="_blank">
-                                    <i class="fas fa-external-link-alt"></i> Visit Site
-                                </a>
-                            </div>
+                            <h3 class="text-xl font-bold text-white mb-4">World Anvil</h3>
+                            <p class="text-sm text-gray-400 mb-6">Build your worlds, manage your campaigns, and bring your stories to life with powerful tools.</p>
+                            <a href="https://worldanvil.pxf.io/c/6381096/1601963/10846" target="_blank" class="text-blue-500 font-bold uppercase tracking-widest text-xs">Visit Site</a>
                         </div>
                     </div>
                 </section>
-
-                <hr class="section-divider">
-
-                <section class="social-links-section card">
-                    <div class="section-title-container">
-                        <i class="fas fa-share-alt"></i>
-                        <h2>Connect With Me</h2>
-                    </div>
-                    <div class="social-links">
-                        <a href="https://patreon.com/Jimpeccable" target="_blank" aria-label="Patreon"><i class="fab fa-patreon"></i></a>
-                        <a href="https://www.tiktok.com/@rollnat20" target="_blank" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
-                    </div>
-                </section>
-
-                <hr class="section-divider">
-
-                <footer class="footer-section card">
-                    <div class="patreon-promo">
-                        <p class="section-description">
-                            If you find these resources helpful and wish to support my work, consider becoming a patron!
-                            Your support helps me create more amazing content for the D&D community.
-                        </p>
-                        <a href="https://patreon.com/Jimpeccable" class="button patreon-button" target="_blank">
-                            <i class="fab fa-patreon"></i> Support Me on Patreon
-                        </a>
-                    </div>
-                    <p class="copyright-text">
-                        © 2025 Jimpeccable. All rights reserved.
-                    </p>
-                </footer>
             </div>
         </div>
-    </div>
+    </main>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.cells.min.js"></script>
+    <!-- Testimonials Section -->
+    <section class="mb-24 py-16">
+        <div class="max-w-[1920px] mx-auto px-6 lg:px-20">
+            <h2 class="text-3xl font-bold text-white mb-12 text-center">What Patrons Are Saying</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="glass-card rounded-2xl testimonial-card">
+                    <div class="testimonial-stars">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                    <p class="text-gray-300 text-sm mb-4 italic">"These tools have completely transformed how I run my sessions. Worth every penny!"</p>
+                    <p class="text-xs text-gray-500">- Anonymous Patron</p>
+                </div>
+                <div class="glass-card rounded-2xl testimonial-card">
+                    <div class="testimonial-stars">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                    <p class="text-gray-300 text-sm mb-4 italic">"The maps and scenes are absolutely stunning. My players are blown away every session."</p>
+                    <p class="text-xs text-gray-500">- Anonymous Patron</p>
+                </div>
+                <div class="glass-card rounded-2xl testimonial-card">
+                    <div class="testimonial-stars">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                    <p class="text-gray-300 text-sm mb-4 italic">"Best investment for my D&D campaigns. The automation tools save me hours of prep time."</p>
+                    <p class="text-xs text-gray-500">- Anonymous Patron</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-20 border-t border-white/10 text-center">
+        <div class="max-w-[1920px] mx-auto px-6 lg:px-20">
+            <p class="text-gray-400 mb-6">If you find these resources helpful and wish to support my work, consider becoming a patron! Your support helps me create more amazing content for the D&D community.</p>
+            <a href="https://patreon.com/Jimpeccable" target="_blank" class="btn-premium inline-block mb-8">Support Me on Patreon</a>
+            <p class="text-xs text-gray-600 font-bold uppercase tracking-[0.2em] mb-4">Jimpeccable's Patreon Dashboard</p>
+            <div class="flex justify-center gap-8 mb-8">
+                <a href="https://patreon.com/Jimpeccable" class="text-gray-400 hover:text-white"><i class="fa-brands fa-patreon"></i></a>
+                <a href="https://www.tiktok.com/@rollnat20" class="text-gray-400 hover:text-white"><i class="fa-brands fa-tiktok"></i></a>
+            </div>
+            <p class="text-[10px] text-gray-700">© 2026 Jimpeccable. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Mobile CTA -->
+    <a href="https://patreon.com/Jimpeccable" target="_blank" class="mobile-cta" aria-label="Join Patreon">
+        <i class="fa-brands fa-patreon text-2xl"></i>
+    </a>
+
+    <!-- SACRED AUTHENTICATION LOGIC - DO NOT MODIFY -->
     <script>
         // Initialize Vanta.js background
         VANTA.CELLS({
-            el: "#vanta-background",
+            el: "#vanta-canvas",
             mouseControls: true,
             touchControls: true,
             gyroControls: false,
             minHeight: 200.00,
             minWidth: 200.00,
             scale: 1.00,
-            color1: 0x1A1A1A, // Darker color
-            color2: 0x303030 // Lighter dark color
+            color1: 0x1A1A1A,
+            color2: 0x303030
         });
 
         // Simple SHA-256 implementation for GitHub Pages compatibility
+        // CRITICAL: This function MUST remain unchanged
         function sha256(str) {
             function rightRotate(value, amount) {
                 return (value >>> amount) | (value << (32 - amount));
@@ -705,11 +852,12 @@
         }
 
         // Monthly Code Generation (Existing Logic)
+        // CRITICAL: These constants MUST remain unchanged
         const MONTHLY_CODE_SECRET = "D&DTrackerSecretKey2025!";
-        const UNLOCK_SECRET_PHRASE = "JIMPECCABLEUNLOCKSECRET!"; // NEW secret for the padlock
+        const UNLOCK_SECRET_PHRASE = "JIMPECCABLEUNLOCKSECRET!";
+        const CODE_LENGTH = 8;
 
-        const CODE_LENGTH = 8; // Both codes are 8 characters long
-
+        // CRITICAL: This function MUST remain unchanged
         function generateMonthlyCode(date) {
             const year = date.getFullYear();
             const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -721,12 +869,11 @@
             return alphanumericHash.substring(0, CODE_LENGTH).toUpperCase();
         }
 
-        // NEW: Generate the monthly-cycling Unlock Code
+        // CRITICAL: This function MUST remain unchanged
         function generateUnlockCode(date) {
             const year = date.getFullYear();
             const month = (date.getMonth() + 1).toString().padStart(2, '0');
 
-            // Use a *different* secret phrase for the unlock code
             const inputString = `${UNLOCK_SECRET_PHRASE}-${year}-${month}`;
             const hexHash = sha256(inputString);
 
@@ -734,7 +881,7 @@
             return alphanumericHash.substring(0, CODE_LENGTH).toUpperCase();
         }
 
-        // Function to update the displayed monthly code
+        // CRITICAL: This function MUST remain unchanged
         function updateMonthlyCodeDisplay() {
             const codeDisplayElement = document.getElementById('monthlyCodeDisplay');
             if (codeDisplayElement) {
@@ -742,12 +889,13 @@
             }
         }
 
-        // Function to copy the monthly exclusive code to clipboard
+        // CRITICAL: This function MUST remain unchanged
         function copyCode() {
             const codeDisplayElement = document.getElementById('monthlyCodeDisplay');
             if (!codeDisplayElement) return;
 
             const code = codeDisplayElement.textContent;
+            const copyText = document.getElementById('copyText');
 
             const tempInput = document.createElement('textarea');
             tempInput.value = code;
@@ -756,14 +904,14 @@
             document.execCommand('copy');
             document.body.removeChild(tempInput);
 
-            const originalText = codeDisplayElement.textContent;
-            codeDisplayElement.textContent = 'COPIED!';
+            const originalText = copyText.textContent;
+            copyText.textContent = 'COPIED!';
             setTimeout(() => {
-                codeDisplayElement.textContent = originalText;
+                copyText.textContent = originalText;
             }, 1500);
         }
 
-        // NEW: Function to copy Manifest URL to clipboard
+        // CRITICAL: This function MUST remain unchanged
         function copyManifestUrl(url, buttonElement) {
             const tempInput = document.createElement('textarea');
             tempInput.value = url;
@@ -772,17 +920,21 @@
             document.execCommand('copy');
             document.body.removeChild(tempInput);
 
-            const originalText = buttonElement.innerHTML; // Store original button content
-            buttonElement.innerHTML = '<i class="fas fa-check"></i> COPIED!'; // Change button text to indicate success
+            const originalText = buttonElement.innerHTML;
+            buttonElement.innerHTML = '<i class="fas fa-check"></i> COPIED!';
             setTimeout(() => {
-                buttonElement.innerHTML = originalText; // Revert button text after 1.5 seconds
+                buttonElement.innerHTML = originalText;
             }, 1500);
         }
 
-
-        // --- Unlock Logic (Modified for monthly refresh) ---
+        // CRITICAL: This function MUST remain unchanged
         function applyLockState() {
             const lockOverlay = document.getElementById('lockOverlay');
+            if (!lockOverlay) {
+                console.error('lockOverlay element not found!');
+                return;
+            }
+            
             const currentDate = new Date();
             const currentMonthUTC = currentDate.getUTCMonth();
             const currentYearUTC = currentDate.getUTCFullYear();
@@ -790,7 +942,6 @@
             const lastUnlockedMonthUTC = localStorage.getItem('jimpeccableUnlockedMonthUTC');
             const lastUnlockedYearUTC = localStorage.getItem('jimpeccableUnlockedYearUTC');
 
-            // Check if content was previously unlocked AND if it's the same month/year
             const isUnlockedForCurrentMonth = (
                 localStorage.getItem('jimpeccableUnlocked') === 'true' &&
                 currentMonthUTC.toString() === lastUnlockedMonthUTC &&
@@ -799,9 +950,8 @@
 
             if (isUnlockedForCurrentMonth) {
                 lockOverlay.classList.add('hidden');
-                updateMonthlyCodeDisplay(); // Update monthly code only if unlocked
+                updateMonthlyCodeDisplay();
             } else {
-                // If not unlocked for current month, ensure overlay is visible and clear old unlock state
                 lockOverlay.classList.remove('hidden');
                 localStorage.removeItem('jimpeccableUnlocked');
                 localStorage.removeItem('jimpeccableUnlockedMonthUTC');
@@ -818,20 +968,19 @@
             // Apply initial lock state based on current date and stored state
             applyLockState();
 
-            // Event listener for the unlock button
             if (unlockButton) {
                 unlockButton.addEventListener('click', () => {
                     const enteredCode = unlockCodeInput.value.trim().toUpperCase();
-                    const expectedCode = generateUnlockCode(new Date()); // Generate for current date
+                    const currentDate = new Date();
+                    const expectedCode = generateUnlockCode(currentDate);
 
                     if (enteredCode === expectedCode) {
                         lockOverlay.classList.add('hidden');
                         localStorage.setItem('jimpeccableUnlocked', 'true');
-                        const currentDate = new Date();
                         localStorage.setItem('jimpeccableUnlockedMonthUTC', currentDate.getUTCMonth().toString());
                         localStorage.setItem('jimpeccableUnlockedYearUTC', currentDate.getUTCFullYear().toString());
                         unlockError.classList.remove('show');
-                        updateMonthlyCodeDisplay(); // Update monthly code after unlocking
+                        updateMonthlyCodeDisplay();
                     } else {
                         unlockError.textContent = 'Incorrect code. Please try again.';
                         unlockError.classList.add('show');
@@ -843,7 +992,6 @@
                 });
             }
 
-            // Allow unlocking with Enter key in the input field
             if (unlockCodeInput) {
                 unlockCodeInput.addEventListener('keyup', (event) => {
                     if (event.key === 'Enter') {
@@ -852,11 +1000,116 @@
                 });
             }
 
-            // Set up interval to check for month change and re-lock if needed
             setInterval(() => {
-                applyLockState(); // Re-evaluate lock state daily
-            }, 1000 * 60 * 60 * 24); // Check once every 24 hours
+                applyLockState();
+            }, 1000 * 60 * 60 * 24);
+
+            // Add share buttons to all project cards
+            addShareButtonsToCards();
+
+            // Search functionality
+            const searchInput = document.getElementById('resourceSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const searchTerm = e.target.value.toLowerCase().trim();
+                    const cards = document.querySelectorAll('.project-card');
+                    
+                    cards.forEach(card => {
+                        const title = card.querySelector('h3')?.textContent.toLowerCase() || '';
+                        const description = card.querySelector('p')?.textContent.toLowerCase() || '';
+                        const matches = title.includes(searchTerm) || description.includes(searchTerm);
+                        card.style.display = matches ? '' : 'none';
+                    });
+                });
+            }
         });
+
+        // Share functionality
+        function shareResource(platform, button) {
+            const card = button.closest('.project-card');
+            const title = card?.querySelector('h3')?.textContent || 'Check out this D&D resource!';
+            const url = card?.dataset.resourceUrl || window.location.href;
+            const shareUrl = window.location.href;
+            const shareText = `Check out "${title}" from Jimpeccable's Patreon Dashboard!`;
+
+            let shareLink = '';
+
+            switch(platform) {
+                case 'twitter':
+                    shareLink = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+                    break;
+                case 'facebook':
+                    shareLink = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+                    break;
+                case 'reddit':
+                    shareLink = `https://reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(title)}`;
+                    break;
+                case 'copy':
+                    navigator.clipboard.writeText(shareUrl).then(() => {
+                        const originalHTML = button.innerHTML;
+                        button.innerHTML = '<i class="fa-solid fa-check"></i>';
+                        button.style.color = 'var(--apple-green)';
+                        setTimeout(() => {
+                            button.innerHTML = originalHTML;
+                            button.style.color = '';
+                        }, 2000);
+                    });
+                    return;
+            }
+
+            if (shareLink) {
+                window.open(shareLink, '_blank', 'width=600,height=400');
+            }
+        }
+
+        // Add share buttons to all project cards
+        function addShareButtonsToCards() {
+            const cards = document.querySelectorAll('.project-card');
+            cards.forEach(card => {
+                // Skip if share buttons already exist
+                if (card.querySelector('.share-buttons')) return;
+
+                const title = card.querySelector('h3')?.textContent || '';
+                const linkElement = card.querySelector('a[href]');
+                const buttonElement = card.querySelector('button');
+                const url = linkElement?.href || buttonElement?.onclick?.toString().match(/https?:\/\/[^\s'"]+/)?.[0] || window.location.href;
+
+                // Set data attributes if not already set
+                if (!card.dataset.resourceTitle) {
+                    card.dataset.resourceTitle = title;
+                }
+                if (!card.dataset.resourceUrl && url) {
+                    card.dataset.resourceUrl = url;
+                }
+
+                // Find the action button/link container
+                const actionContainer = linkElement?.parentElement || buttonElement?.parentElement;
+                if (actionContainer) {
+                    // Add margin bottom to action button
+                    if (linkElement) linkElement.classList.add('mb-3');
+                    if (buttonElement) buttonElement.classList.add('mb-3');
+
+                    // Create share buttons container
+                    const shareContainer = document.createElement('div');
+                    shareContainer.className = 'share-buttons';
+                    shareContainer.innerHTML = `
+                        <button class="share-btn twitter" onclick="shareResource('twitter', this)" title="Share on Twitter">
+                            <i class="fa-brands fa-twitter"></i>
+                        </button>
+                        <button class="share-btn facebook" onclick="shareResource('facebook', this)" title="Share on Facebook">
+                            <i class="fa-brands fa-facebook"></i>
+                        </button>
+                        <button class="share-btn reddit" onclick="shareResource('reddit', this)" title="Share on Reddit">
+                            <i class="fa-brands fa-reddit"></i>
+                        </button>
+                        <button class="share-btn copy" onclick="shareResource('copy', this)" title="Copy link">
+                            <i class="fa-solid fa-link"></i>
+                        </button>
+                    `;
+                    actionContainer.appendChild(shareContainer);
+                }
+            });
+        }
     </script>
 </body>
 </html>
